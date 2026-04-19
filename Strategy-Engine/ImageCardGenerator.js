@@ -6,8 +6,8 @@
 const path = require('path');
 const fs = require('fs');
 
-let sharp;
-try { sharp = require('sharp'); } catch (e) { sharp = null; }
+let Resvg;
+try { Resvg = require('@resvg/resvg-js').Resvg; } catch (e) { Resvg = null; }
 
 function _escSVG(str) {
     return (str || '')
@@ -120,20 +120,20 @@ function _pickStyle(contentType) {
 }
 
 async function generateCardBuffer(title, contentType = 'DEEP_INTEL', riskScore = 50, draft = '') {
-    if (!sharp) {
-        console.log(`   [IMGCARD] sharp ไม่ได้ติดตั้ง — ข้าม image card`);
+    if (!Resvg) {
+        console.log(`   [IMGCARD] @resvg/resvg-js ไม่ได้ติดตั้ง — ข้าม image card`);
         return null;
     }
     try {
-        // ใช้ draft ถ้ามี, ไม่งั้นใช้ title
         const source = draft || title;
         const lines = _extractCardLines(source);
         if (lines.length === 0) lines.push(title.substring(0, 40));
 
         const style = _pickStyle(contentType);
         const svg = generateViralSVG(lines, style);
-        const buf = await sharp(Buffer.from(svg)).png().toBuffer();
-        return buf;
+        const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1080 } });
+        const pngData = resvg.render();
+        return pngData.asPng();
     } catch (e) {
         console.log(`   [IMGCARD] Error: ${e.message}`);
         return null;
