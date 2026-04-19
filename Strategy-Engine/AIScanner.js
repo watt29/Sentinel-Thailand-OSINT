@@ -167,23 +167,22 @@ class AIScanner {
                - ถ้าเป็นข่าวกีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
                - ถ้าเป็นข่าวเทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? แชร์ความคิดเห็น 👇"
                - ถ้าเป็นข่าวทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
-            5. MANDATORY HASHTAGS — Analyze the news category first, then assign EXACTLY 8 hashtags on the last line using this system:
+            5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
+               STEP 1: Read the news and pick ONLY ONE category from this list:
+                 A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
 
-               ALWAYS INCLUDE (4 fixed):
-               #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT
+               STEP 2: Use ONLY the hashtags for that ONE category — DO NOT MIX categories:
+                 A → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
+                 B → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
+                 C → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
+                 D → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
+                 E → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
+                 F → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
+                 G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #วิทยาศาสตร์ #Health #Science
+                 H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
 
-               THEN pick EXACTLY 4 more based on the news category below:
-
-               🏛️ POLITICS/WAR → #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
-               💰 ECONOMY/FINANCE → #เศรษฐกิจโลก #การเงิน #Economy #Finance
-               ⚽ SPORTS/FOOTBALL → #กีฬา #ฟุตบอลโลก #Sports #Football
-               🤖 TECH/AI → #เทคโนโลยี #AI #Tech #Innovation
-               🌍 ENVIRONMENT/CLIMATE → #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
-               🎬 ENTERTAINMENT → #บันเทิง #ดารา #Entertainment #Trending
-               🏥 HEALTH/SCIENCE → #สุขภาพ #วิทยาศาสตร์ #Health #Science
-               🇹🇭 THAI NEWS → #ไทย #ข่าวไทย #Thailand #ThaiNews
-
-            6. TOTAL = EXACTLY 8 hashtags. NO MORE NO LESS. Last line only.
+               STEP 3: Copy the exact 8 hashtags to the last line. TOTAL = EXACTLY 8. NO MORE.
+            6. VIOLATION = REJECTED POST. Place hashtags on the very last line only.
             Report: ${draft}`;
             const finalReport = await this._callGroq(polishPrompt);
 
