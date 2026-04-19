@@ -10,6 +10,17 @@ const sheetLogger = require('./Strategy-Engine/SheetLogger');
 const tokenManager = require('./LongLivedTokenGenerator');
 require('dotenv').config();
 
+let analytics;
+try { analytics = require('./Strategy-Engine/AnalyticsEngine'); } catch (e) { analytics = null; }
+
+// Refresh Facebook Insights ทุก 6 ชม.
+if (analytics) {
+    setInterval(async () => {
+        const token = fbPublisher.accessToken;
+        if (token) await analytics.refreshInsights(token);
+    }, 6 * 60 * 60 * 1000);
+}
+
 const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const TOKEN_WARN_DAYS = 7;
 
@@ -167,7 +178,12 @@ async function runGovernanceBriefing() {
             const displayImg = finalSelection.original_news.image;
             const imgType = "Original News Asset";
 
-            const fbRes = await fbPublisher.postPhotoWithCaption(displayImg, finalSelection.facebook_draft);
+            const fbRes = await fbPublisher.postPhotoWithCaption(displayImg, finalSelection.facebook_draft, {
+                title: finalSelection.status,
+                contentType: finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
+                             finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL',
+                riskScore: score
+            });
             
             // Audit Report
             const fbId = fbRes && fbRes.postId ? fbRes.postId : "N/A";
@@ -183,6 +199,13 @@ async function runGovernanceBriefing() {
                              `📝 <i>Audit complete. Governance verified.</i>`;
             
             await notifier.sendMessage(auditMsg);
+
+            // Track post สำหรับ Analytics
+            if (analytics && fbRes?.postId && fbRes.postId !== 'N/A') {
+                const cType = finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
+                              finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL';
+                analytics.trackPost(fbRes.postId, cType);
+            }
         }
 
         storage.saveIntel(finalSelection);

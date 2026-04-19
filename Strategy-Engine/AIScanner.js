@@ -6,6 +6,9 @@ const axios = require('axios');
 const RSSParser = require('rss-parser');
 require('dotenv').config();
 
+let analytics;
+try { analytics = require('./AnalyticsEngine'); } catch (e) { analytics = null; }
+
 const GLOBAL_RSS_TABLE = [
   // --- GLOBAL POWERHOUSES ---
   { url: 'http://p.apnews.com/rss/world-news', region: 'GLOBAL' },
@@ -109,12 +112,17 @@ class AIScanner {
       const newsItems = await this._fetchNews();
       if (!newsItems || newsItems.length === 0) return { status: "No News" };
 
-      // สัดส่วน: DEEP_INTEL 50% | QUICK_SHARE 25% | ENGAGEMENT_POST 20% | SYSTEM_BRANDING 5%
-      const dice = Math.floor(Math.random() * 100) + 1;
-      let contentType = "DEEP_INTEL";
-      if (dice > 50 && dice <= 75) contentType = "QUICK_SHARE";
-      if (dice > 75 && dice <= 95) contentType = "ENGAGEMENT_POST";
-      if (dice > 95) contentType = "SYSTEM_BRANDING";
+      // ใช้ AnalyticsEngine ถ้ามี (ปรับ weight อัตโนมัติตาม Insights จริง) ไม่งั้นใช้ dice static
+      let contentType;
+      if (analytics) {
+          contentType = analytics.pickContentType();
+      } else {
+          const dice = Math.floor(Math.random() * 100) + 1;
+          contentType = "DEEP_INTEL";
+          if (dice > 40 && dice <= 55) contentType = "QUICK_SHARE";
+          if (dice > 55 && dice <= 95) contentType = "ENGAGEMENT_POST";
+          if (dice > 95) contentType = "SYSTEM_BRANDING";
+      }
 
       console.log(`   [STRATEGY] Current Cycle Mode: ${contentType}`);
 
@@ -139,12 +147,20 @@ class AIScanner {
             if (contentType === "DEEP_INTEL") {
                 draftPrompt = `Task: Create a Thai Facebook post for this news: "${target.title}". Facts: ${target.content}.
                 STRICT LENGTH: Maximum 5-6 sentences total. NO bullet points. NO headers. NO sections.
+
+                MANDATORY — OPEN WITH ONE OF THESE STORYTELLING HOOKS (pick the one that fits the emotion):
+                - Shock/Surprise: "ไม่น่าเชื่อเลยครับ — [เรื่องราวในหนึ่งบรรทัด]"
+                - Curiosity: "รู้ไหมครับว่า [ข้อเท็จจริงน่าแปลกใจ]?"
+                - Urgency: "เพิ่งเกิดขึ้นเมื่อกี้ครับ — [หัวข้อ]"
+                - Human angle: "ลองนึกภาพดูครับว่า [สถานการณ์ที่เกิดขึ้นจริง]..."
+                - Bold claim: "[ตัวเลขหรือข้อเท็จจริงที่น่าตกใจ] — นี่คือสิ่งที่เกิดขึ้นจริงครับ"
+
                 Structure:
-                📍 [หัวข้อภาษาไทย 1 บรรทัด]
+                [HOOK — 1 บรรทัด ดึงดูดทันที ไม่ใช่หัวข้อข่าวธรรมดา]
 
-                [เนื้อหาสรุป 3-4 ประโยค กระชับ เข้าใจง่าย]
+                [เนื้อหาสรุป 3-4 ประโยค บอกเล่าเหมือนเพื่อนเล่าให้ฟัง ไม่ใช่นักข่าวอ่านข่าว]
 
-                [ผลกระทบต่อไทย 1 ประโยค]`;
+                [ผลกระทบต่อไทยหรือชีวิตประจำวัน 1 ประโยค]`;
             } else if (contentType === "QUICK_SHARE") {
                 draftPrompt = `Task: Create a rapid Thai update for: ${target.title}.
                 STRICT LENGTH: Maximum 3 sentences total.
@@ -152,17 +168,52 @@ class AIScanner {
 
                 [สรุป 2-3 ประโยคสั้นๆ]`;
             } else if (contentType === "ENGAGEMENT_POST") {
-                draftPrompt = `Task: Create a SHORT viral Thai Facebook engagement post inspired by this news topic: "${target.title}".
-                RULES:
-                1. Write in Thai ONLY. Max 5 lines total.
-                2. Use large bold-style text (no markdown, just plain text with line breaks)
-                3. Present a simple contrast or dilemma related to the news that makes people want to comment
-                4. Format EXACTLY like this example:
-                   [สถานการณ์ A]
-                   กับ [สถานการณ์ B]
+                // เลือก format แบบสุ่ม — หลากหลายรูปแบบทำให้เพจไม่น่าเบื่อ
+                const engFormat = Math.floor(Math.random() * 4);
+                const engInstructions = [
+                    // Format 0: Contrast dilemma (viral classic)
+                    `CHOOSE ONE FORMAT — "Contrast Dilemma":
+                    [สถานการณ์ A ที่เชื่อมกับข่าว]
+                    กับ [สถานการณ์ B ที่ขัดแย้ง]
 
-                   คุณเลือกแบบไหนครับ? 👇
-                5. Make it relatable to everyday Thai life — money, work, family, politics, sports
+                    คุณเลือกแบบไหนครับ? 👇`,
+
+                    // Format 1: Poll question
+                    `CHOOSE ONE FORMAT — "Poll Question":
+                    ถ้าเกิดเหตุการณ์นี้กับคุณ คุณจะทำอะไร?
+
+                    🅰️ [ตัวเลือก A]
+                    🅱️ [ตัวเลือก B]
+                    🆘 [ตัวเลือก C]
+
+                    คอมเมนต์ตัวอักษรที่คุณเลือกได้เลยครับ 👇`,
+
+                    // Format 2: Hot take / bold opinion
+                    `CHOOSE ONE FORMAT — "Hot Take":
+                    ความจริงที่ใครก็ไม่อยากพูด:
+
+                    "[ความคิดเห็นที่แหลมคม กล้าพูดตรงๆ เกี่ยวกับประเด็นข่าว]"
+
+                    เห็นด้วยไหมครับ? 🔥`,
+
+                    // Format 3: Relatable life scenario
+                    `CHOOSE ONE FORMAT — "Relatable Scenario":
+                    ถ้าวันนี้ [เหตุการณ์จากข่าวเกิดขึ้นในชีวิตคุณ]...
+
+                    คุณจะรู้สึกยังไงครับ?
+                    😤 โกรธมาก
+                    😱 ตกใจ
+                    😅 ช่างมันเถอะ
+                    🤔 ยังไม่แน่ใจ`
+                ][engFormat];
+
+                draftPrompt = `Task: Create a SHORT viral Thai Facebook engagement post inspired by this news: "${target.title}".
+                RULES:
+                1. Write in Thai ONLY. Max 6 lines total.
+                2. Plain text only — no markdown, no asterisks
+                3. Make it DIRECTLY related to the news topic — translate the news into a Thai life situation
+                4. ${engInstructions}
+                5. NEVER sound like a news report — sound like a real Thai person posting on their personal Facebook
                 6. NO hashtags in this draft (editor will add them)`;
             } else {
                 draftPrompt = `Task: Write a SHORT Thai promotional post for Sentinel Thailand page. Theme: AI, news, intelligence.
@@ -179,8 +230,21 @@ class AIScanner {
 
             // ENGAGEMENT_POST ใช้ format สั้น ไม่ต้อง polish ยาว
             if (contentType === "ENGAGEMENT_POST") {
-                const engHashtags = "#ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ความคิดเห็น #ถามตอบ #Thailand #ThaiNews";
-                const finalDraft = draft.trim() + `\n\n${engHashtags}`;
+                // hashtags ตาม topic ของข่าว เหมือน DEEP_INTEL
+                const engPolishPrompt = `ดูเนื้อหาข่าวนี้: "${target.title}"
+                เลือก category ที่ตรงที่สุด 1 อย่าง แล้ว copy hashtag ตามนั้นมาต่อท้าย post นี้พอดีๆ:
+                A (การเมือง/สงคราม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
+                B (เศรษฐกิจ/ธุรกิจ) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
+                C (กีฬา) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
+                D (เทคโนโลยี/AI) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
+                E (สิ่งแวดล้อม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
+                F (บันเทิง/วัฒนธรรม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
+                G (สุขภาพ/การแพทย์) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
+                H (ข่าวไทยโดยตรง) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
+                Output ทั้ง post + hashtag ต่อกันเลย ห้ามเปลี่ยนเนื้อหา post:
+                ${draft.trim()}`;
+                const engWithHashtags = await this._callGroq(engPolishPrompt);
+                const finalDraft = engWithHashtags.trim();
                 candidates.push({
                     status: target.title,
                     original_news: target,
