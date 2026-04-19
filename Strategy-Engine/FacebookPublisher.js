@@ -128,46 +128,37 @@ class FacebookPublisher {
       return { success: false, error: this.tokenExpired ? 'TOKEN_EXPIRED' : 'DISABLED' };
     }
 
-    // ลอง RSS image ก่อน
+    // ถ้าไม่มีรูป — ข้ามเลย
+    if (!imageUrl) {
+      console.log(`   [SOCIAL] ⚠️ No image — skipping post`);
+      return { success: false, error: 'NO_IMAGE' };
+    }
+
+    // ตรวจสอบ URL รูปก่อนส่งให้ Facebook
     const accessible = await this._isImageAccessible(imageUrl);
-    if (accessible) {
-      try {
-        const url = `https://graph.facebook.com/v19.0/me/photos`;
-        const response = await axios.post(url, {
-          url: imageUrl,
-          caption: message,
-          access_token: this.accessToken
-        });
-        if (response.data && response.data.id) {
-          console.log(`   [SOCIAL] 🖼️ Photo Published! ID: ${response.data.id}`);
-          return { success: true, postId: response.data.id };
-        }
-      } catch (e) {
-        const errCode = e.response?.data?.error?.code;
-        const errMsg = e.response?.data?.error?.message || e.message;
-        if (this._isTokenError(errCode)) { await this._handleTokenExpiry(errMsg); return { success: false, error: errMsg }; }
-        console.log(`   [SOCIAL] ⚠️ RSS image failed (${errMsg}) — trying card fallback`);
-      }
-    } else {
-      console.log(`   [SOCIAL] ⚠️ Image URL blocked — using generated card`);
+    if (!accessible) {
+      console.log(`   [SOCIAL] ⚠️ Image URL blocked — skipping post`);
+      return { success: false, error: 'IMAGE_BLOCKED' };
     }
 
-    // Fallback: สร้าง text card แล้ว upload โดยตรง
-    if (cardGen) {
-      const title = cardMeta.title || '';
-      const contentType = cardMeta.contentType || 'DEEP_INTEL';
-      const riskScore = cardMeta.riskScore || 50;
-      const draft = cardMeta.draft || '';
-      const buf = await cardGen.generateCardBuffer(title, contentType, riskScore, draft);
-      if (buf) {
-        console.log(`   [SOCIAL] 🎨 Generated text card — uploading`);
-        return this._uploadPhotoBuffer(buf, message);
+    try {
+      const url = `https://graph.facebook.com/v19.0/me/photos`;
+      const response = await axios.post(url, {
+        url: imageUrl,
+        caption: message,
+        access_token: this.accessToken
+      });
+      if (response.data && response.data.id) {
+        console.log(`   [SOCIAL] 🖼️ Photo Published! ID: ${response.data.id}`);
+        return { success: true, postId: response.data.id };
       }
+      return { success: false, error: 'UNKNOWN_RESPONSE' };
+    } catch (e) {
+      const errCode = e.response?.data?.error?.code;
+      const errMsg = e.response?.data?.error?.message || e.message;
+      if (this._isTokenError(errCode)) await this._handleTokenExpiry(errMsg);
+      return { success: false, error: errMsg };
     }
-
-    // Last resort: text-only post
-    console.log(`   [SOCIAL] 📝 Falling back to text-only post`);
-    return this.publish(message);
   }
 
   /**

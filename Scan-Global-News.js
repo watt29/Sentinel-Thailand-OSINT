@@ -169,8 +169,11 @@ async function runGovernanceBriefing() {
             if (fbRes && fbRes.success) {
                 console.log(`   [SOCIAL] ✅ Posted! ID: ${fbRes.postId} (${cType})`);
                 if (analytics && fbRes.postId) analytics.trackPost(fbRes.postId, cType);
+            } else if (fbRes?.error === 'NO_IMAGE' || fbRes?.error === 'IMAGE_BLOCKED') {
+                console.log(`   [SKIP] No image — skipping to next cycle`);
+                setTimeout(runGovernanceBriefing, getNextRunDelayMs());
+                return;
             } else {
-                // แจ้ง Telegram เฉพาะตอน post ล้มเหลว
                 const errMsg = fbRes?.error || 'Unknown error';
                 console.log(`   [SOCIAL] ❌ Post failed: ${errMsg}`);
                 await notifier.sendMessage(
