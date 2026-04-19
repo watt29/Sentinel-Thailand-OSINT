@@ -137,17 +137,20 @@ class AIScanner {
             
             let draftPrompt = "";
             if (contentType === "DEEP_INTEL") {
-                draftPrompt = `Task: Create a deep Thai intelligence brief for: ${target.title}. Fact: ${target.content}. 
-                Structure: 📍 TITLE (Thai)
-                ---
-                Comprehensive Analysis (Thai)
-                #Insight #Professional #Sentinel`;
+                draftPrompt = `Task: Create a Thai Facebook post for this news: "${target.title}". Facts: ${target.content}.
+                STRICT LENGTH: Maximum 5-6 sentences total. NO bullet points. NO headers. NO sections.
+                Structure:
+                📍 [หัวข้อภาษาไทย 1 บรรทัด]
+
+                [เนื้อหาสรุป 3-4 ประโยค กระชับ เข้าใจง่าย]
+
+                [ผลกระทบต่อไทย 1 ประโยค]`;
             } else if (contentType === "QUICK_SHARE") {
-                draftPrompt = `Task: Create a rapid Thai update for: ${target.title}. 
-                Structure: ⚡️ BREAKING: [Thai Impactful Title]
-                ---
-                [Thai Executive Summary 2-3 sentences]
-                #QuickUpdate #News #Thailand`;
+                draftPrompt = `Task: Create a rapid Thai update for: ${target.title}.
+                STRICT LENGTH: Maximum 3 sentences total.
+                Structure: ⚡️ BREAKING: [หัวข้อภาษาไทย]
+
+                [สรุป 2-3 ประโยคสั้นๆ]`;
             } else if (contentType === "ENGAGEMENT_POST") {
                 draftPrompt = `Task: Create a SHORT viral Thai Facebook engagement post inspired by this news topic: "${target.title}".
                 RULES:
