@@ -168,15 +168,8 @@ async function runGovernanceBriefing() {
                 return;
             }
 
-            if (!finalSelection.original_news || !finalSelection.original_news.image) {
-                console.log(`   [SKIP] Mission aborted: No authentic news image found.`);
-                await notifier.sendMessage(`⚠️ <b>MISSION ABORTED</b>: ข้ามการโพสต์ข่าว "${finalSelection.status}" เนื่องจากไม่พบรูปภาพจริงจากแหล่งข่าว`);
-                setTimeout(runGovernanceBriefing, getNextRunDelayMs());
-                return;
-            }
-
-            const displayImg = finalSelection.original_news.image;
-            const imgType = "Original News Asset";
+            const displayImg = finalSelection.original_news?.image || '';
+            const imgType = displayImg ? "Original News Asset" : "Generated Text Card";
 
             const fbRes = await fbPublisher.postPhotoWithCaption(displayImg, finalSelection.facebook_draft, {
                 title: finalSelection.status,
