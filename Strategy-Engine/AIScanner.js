@@ -195,20 +195,28 @@ class AIScanner {
             1. CONTENT MUST BE IN THAI ONLY.
             2. MAXIMUM 6 SENTENCES TOTAL — cut anything longer. NO bullet points. NO headers. NO analysis sections.
             3. KEEP Emojis — they stop the scroll.
-            4. ADD EXACTLY ONE CTA at the end (before hashtags). Read the news emotion carefully and pick the MOST NATURAL human-sounding one:
+            4. HUMAN-LIKE OPENING HOOK: The FIRST LINE must grab attention immediately — write it like a real Thai person talking to a friend, not like a news anchor. Use one of these styles:
+               - ตั้งคำถามที่ทุกคนสงสัย: "รู้ไหมครับว่า..." / "เคยสังเกตไหมว่า..."
+               - บอกเรื่องน่าตกใจตรงๆ: "เพิ่งรู้เลยครับว่า..." / "ไม่น่าเชื่อเลยครับ..."
+               - ชวนคิด: "ถ้าเป็นคุณ คุณจะทำยังไงครับ?"
 
-               ANGER/INJUSTICE → แบบนี้ยุติธรรมแล้วหรือยังครับ? 😤 คอมเมนต์บอกเลย 👇
-               SHOCKING/SURPRISING → ตกใจมากไหมครับ? 😱 คอมเมนต์ความเห็นได้เลย 👇
-               POLITICS/CONFLICT → คุณคิดว่าฝ่ายไหนถูกครับ? 💬 แชร์ความเห็น 👇
-               SPORTS WIN → ลุ้นด้วยกันนะครับ! ⚽🔥 แชร์ให้เพื่อนแฟนบอลรู้ด้วย!
-               SPORTS LOSS/DRAMA → เสียดายมากไหมครับ? 😢 คอมเมนต์ได้เลย 👇
-               TECH/AI → AI จะเปลี่ยนชีวิตคุณไหมครับ? 🤖 คิดยังไงคอมเมนต์บอกเลย 👇
-               ECONOMY/MONEY → กระทบกระเป๋าคุณไหมครับ? 💸 คอมเมนต์บอกเลย 👇
-               HEALTH/DISASTER → ระวังตัวด้วยนะครับทุกคน 🙏 แชร์ให้คนที่รักรู้ด้วย
-               INSPIRING/POSITIVE → ประทับใจมากครับ! ❤️ กดแชร์ให้กำลังใจกัน 🙏
-               GENERAL → คิดเห็นยังไงกับเรื่องนี้ครับ? 💬 คอมเมนต์บอกเลย 👇
+            5. WRITE LIKE A REAL THAI PERSON — use natural conversational Thai:
+               - ใช้ "ครับ" ลงท้ายประโยค
+               - ใช้คำพูดติดปาก เช่น "จริงๆ แล้ว", "น่าสนใจมากๆ เลยครับ", "ต้องบอกเลยว่า"
+               - ไม่ใช้ภาษาทางการ ไม่ใช้ศัพท์วิชาการ
 
-               RULE: Write ONLY the CTA text. ONE line only. NO label. NO explanation.
+            6. ADD EXACTLY ONE CTA — choose based on the EMOTION of the news, write naturally like texting a friend:
+               INJUSTICE/ANGER → "แบบนี้โอเคแล้วหรือยังครับ? บอกความเห็นกันได้เลย 👇"
+               SHOCKING → "ตกใจเหมือนกันไหมครับ? 😱 คอมเมนต์บอกกันได้เลย"
+               POLITICS → "คุณมองเรื่องนี้ยังไงครับ? อยากรู้ความเห็นทุกคนเลย 💬"
+               SPORTS WIN → "ดีใจด้วยกันเลยครับ! 🔥 แชร์ให้เพื่อนๆ รู้ด้วยนะ"
+               SPORTS LOSS → "เสียดายมากเลยครับ 😔 ใครรู้สึกเหมือนกันบ้าง?"
+               TECH/AI → "เทคโนโลยีนี้จะมาเปลี่ยนชีวิตเราไหมครับ? คิดยังไงบอกกันด้วยนะ 🤖"
+               ECONOMY → "รู้สึกยังไงบ้างครับกับเรื่องนี้? กระทบชีวิตเราไหม 💸"
+               HEALTH/DISASTER → "ดูแลตัวเองด้วยนะครับทุกคน 🙏 แชร์ให้คนที่รักรู้ด้วย"
+               POSITIVE/INSPIRING → "ชอบมากเลยครับ ❤️ แชร์ให้กำลังใจกันด้วยนะ"
+               GENERAL → "คิดเห็นยังไงกับเรื่องนี้บ้างครับ? คอมเมนต์มาคุยกันได้เลย 👇"
+               RULE: ONE CTA only. Sound like a real person. NO formal language.
             5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
                STEP 1: Read the news and pick ONLY ONE category from this list:
                  A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
