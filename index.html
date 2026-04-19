@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINEL THAILAND | Intelligence Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-group">
+                <div class="logo-vibe">🛡️</div>
+                <div class="title-group">
+                    <h1>SENTINEL THAILAND</h1>
+                    <p>OSINT INTELLIGENCE COMMAND CENTER</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="live-dot"></div>
+                    <span style="font-size: 0.8rem; font-weight: 700;">SYSTEM ONLINE</span>
+                </div>
+                <a href="https://script.google.com/macros/s/AKfycbwn_V0m96C5vOKfsfQXtaKbbqA2hLqb0Cb1ryFhCaCiRzkxIYuUyCNC72GZRVhfg08/exec" target="_blank" class="btn-primary" style="font-size: 0.7rem; padding: 0.5rem 1rem;">DATABASE ARCHIVE</a>
+            </div>
+        </header>
+
+        <!-- Hero Metrics -->
+        <div class="hero-grid">
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; border-left: 4px solid var(--primary);">
+                <span style="color: var(--text-dim); font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">MISSION STATUS</span>
+                <h2 id="current-mission" style="font-size: 1.8rem; font-weight: 800;">MONITORING GLOBAL RSS...</h2>
+                <p id="next-briefing" style="color: var(--primary); font-family: var(--font-mono); font-size: 0.9rem;">Next briefing in: -- mins</p>
+            </div>
+            
+            <div class="card risk-meter">
+                <span style="color: var(--text-dim); font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem;">GLOBAL RISK INDEX</span>
+                <div class="gauge-circle">
+                    <div id="risk-gauge" class="gauge-inner"></div>
+                </div>
+                <div id="risk-val" class="gauge-val">50%</div>
+            </div>
+
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="color: var(--text-dim); font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem;">CONTENT STRATEGY</span>
+                <div class="donut-wrap">
+                    <div class="donut-label">70/20/10</div>
+                    <svg viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="70, 100"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--secondary)" stroke-width="3" stroke-dasharray="20, 100" stroke-dashoffset="-70"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Intel Feed -->
+        <div class="intel-section">
+            <div id="intel-feed">
+                <div class="feed-header">
+                    <h3 style="font-size: 1.2rem; font-weight: 700;">LATEST INTELLIGENCE BRIEFS</h3>
+                    <span style="color: var(--text-dim); font-size: 0.8rem;">Real-time Update</span>
+                </div>
+                
+                <!-- Prototype of an Intel Card -->
+                <div class="card intel-card">
+                    <div class="intel-meta">
+                        <span class="tag-deep">DEEP_INTEL</span>
+                        <span class="tag-time">14:18 | 19 APR 2026</span>
+                    </div>
+                    <img src="https://aljazeera.com/wp-content/uploads/2026/04/cuba.jpg" class="intel-image" alt="Intel Image">
+                    <h2 class="intel-title">Mexico, Spain and Brazil join forces for Cuba Sovereignty Support</h2>
+                    <div class="intel-content">เม็กซิโก สเปน และบราซิล ได้ออกแสดงจุดยืนร่วมกัน โดยเรียกร้องให้มีการปกป้องอธิปไตยของคิวบา...</div>
+                </div>
+
+                <div id="loading-spinner" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    SYNCHRONIZING WITH ENGINE...
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar-group">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">🌍 TOP REGIONS</h3>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem;">
+                        <li style="display: flex; justify-content: space-between;"><span>Global Affairs</span><span style="color: var(--primary);">45%</span></li>
+                        <li style="display: flex; justify-content: space-between;"><span>Middle East</span><span style="color: var(--accent);">30%</span></li>
+                        <li style="display: flex; justify-content: space-between;"><span>Southeast Asia</span><span style="color: var(--secondary);">25%</span></li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">📡 ACTIVE SOURCES</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.7rem;">Al Jazeera</span>
+                        <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.7rem;">Reuters</span>
+                        <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.7rem;">The Guardian</span>
+                        <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.7rem;">Thai PBS</span>
+                    </div>
+                </div>
+
+                <a href="https://www.facebook.com/SentinelThailand" target="_blank" class="btn-primary">VISIT FACEBOOK PAGE</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

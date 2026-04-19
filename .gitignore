@@ -1,0 +1,19 @@
+# Secrets
+.env
+.env.*
+
+# Database
+*.db
+*.sqlite
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Scratch / temp
+scratch/
+sessions/
+
+# OS
+.DS_Store
+Thumbs.db
