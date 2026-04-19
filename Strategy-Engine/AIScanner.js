@@ -205,59 +205,15 @@ class AIScanner {
                - ใช้คำพูดติดปาก เช่น "จริงๆ แล้ว", "น่าสนใจมากๆ เลยครับ", "ต้องบอกเลยว่า"
                - ไม่ใช้ภาษาทางการ ไม่ใช้ศัพท์วิชาการ
 
-            6. ADD EXACTLY ONE CTA — analyze the EMOTION of the news deeply, then randomly pick ONE from the matching group below. Sound like a real Thai person texting a friend:
-
-               😤 INJUSTICE/ANGER (pick ONE):
-               - "แบบนี้โอเคแล้วหรือยังครับ? บอกความเห็นกันได้เลย 👇"
-               - "ถ้าเป็นคุณ โกรธไหมครับ? คอมเมนต์บอกกันได้เลย 😤"
-               - "ยุติธรรมแล้วหรือยังครับเรื่องนี้? อยากรู้ความเห็นทุกคนมากๆ เลย"
-
-               😱 SHOCKING/SURPRISING (pick ONE):
-               - "ตกใจเหมือนกันไหมครับ? 😱 คอมเมนต์บอกกันได้เลย"
-               - "ไม่น่าเชื่อเลยใช่ไหมครับ? แชร์ให้เพื่อนๆ ได้รู้กันด้วยนะ"
-               - "ใครคิดว่าเรื่องนี้จะเกิดขึ้นได้บ้างครับ? 😲 คอมเมนต์มาเลย"
-
-               🏛️ POLITICS/CONFLICT (pick ONE):
-               - "คุณมองเรื่องนี้ยังไงครับ? อยากรู้ความเห็นทุกคนเลย 💬"
-               - "ฝ่ายไหนถูกในมุมคุณครับ? คอมเมนต์มาคุยกันได้เลย"
-               - "เรื่องแบบนี้จะไปจบยังไงครับ? ช่วยกันวิเคราะห์หน่อยนะ 🤔"
-
-               ⚽ SPORTS WIN/EXCITING (pick ONE):
-               - "ดีใจด้วยกันเลยครับ! 🔥 แชร์ให้เพื่อนแฟนบอลรู้ด้วยนะ"
-               - "ลุ้นหนักมากเลยครับ! ใครดูอยู่ด้วยกันบ้าง? 🙋"
-               - "สุดยอดมากเลยครับ! 🏆 ใครชอบกีฬานี้บ้าง คอมเมนต์มาได้เลย"
-
-               😔 SPORTS LOSS/SAD (pick ONE):
-               - "เสียดายมากเลยครับ 😔 ใครรู้สึกเหมือนกันบ้าง?"
-               - "หวังว่าครั้งหน้าจะดีกว่านี้นะครับ 💪 กำลังใจให้ด้วย"
-               - "แพ้ครั้งนี้เพื่อชนะครั้งหน้าครับ 🙏 คอมเมนต์ให้กำลังใจกันหน่อยนะ"
-
-               🤖 TECH/AI (pick ONE):
-               - "เทคโนโลยีนี้จะมาเปลี่ยนชีวิตเราไหมครับ? คิดยังไงบอกกันด้วยนะ 🤖"
-               - "AI แบบนี้ดีหรือน่ากลัวกว่ากันครับ? คอมเมนต์มาคุยกัน 💬"
-               - "อีก 5 ปีข้างหน้าโลกจะเป็นยังไงครับ? แชร์ความคิดมาได้เลย 🚀"
-
-               💸 ECONOMY/MONEY (pick ONE):
-               - "รู้สึกยังไงบ้างครับกับเรื่องนี้? กระทบชีวิตเราไหม 💸"
-               - "กระเป๋าตังค์หนักขึ้นหรือเบาลงครับ? คอมเมนต์บอกกันได้เลย"
-               - "เรื่องเงินๆ ทองๆ แบบนี้ ใครได้รับผลกระทบบ้างครับ? 👇"
-
-               🏥 HEALTH/DISASTER (pick ONE):
-               - "ดูแลตัวเองด้วยนะครับทุกคน 🙏 แชร์ให้คนที่รักรู้ด้วย"
-               - "ปลอดภัยกันทุกคนด้วยนะครับ ❤️ แชร์เตือนคนใกล้ชิดด้วย"
-               - "เรื่องสุขภาพสำคัญมากครับ อย่าประมาทกันนะ 💊 แชร์ให้เพื่อนๆ รู้ด้วย"
-
-               ❤️ POSITIVE/INSPIRING (pick ONE):
-               - "ชอบมากเลยครับ ❤️ แชร์ให้กำลังใจกันด้วยนะ"
-               - "โลกยังมีเรื่องดีๆ อยู่นะครับ 😊 แชร์ให้คนอื่นยิ้มด้วยกันเลย"
-               - "ประทับใจมากเลยครับ แบบนี้แหละที่ทำให้ยังเชื่อในความดี ❤️"
-
-               💬 GENERAL (pick ONE):
-               - "คิดเห็นยังไงกับเรื่องนี้บ้างครับ? คอมเมนต์มาคุยกันได้เลย 👇"
-               - "เรื่องนี้น่าสนใจมากๆ เลยครับ ใครมีความเห็นบ้าง? 💬"
-               - "อยากรู้ว่าทุกคนคิดยังไงกับเรื่องนี้ครับ คอมเมนต์มาเลยนะ 🙂"
-
-               RULE: Pick ONLY ONE from the correct emotion group. ONE line only. Sound natural. NO formal Thai.
+            6. CREATE A UNIQUE CTA — Do NOT use a template. Read the news content deeply, feel the emotion, then WRITE A BRAND NEW CTA yourself that:
+               - Sounds like a real Thai person (25-35 years old) writing to friends on Facebook
+               - Uses casual Thai: "ครับ", "นะ", "เลย", "มากๆ", "แบบนี้", "จริงๆ"
+               - Matches the EXACT emotion of this specific news (anger/shock/sadness/joy/curiosity/fear/pride)
+               - Is MAX 1-2 sentences
+               - Ends with an emoji that fits the mood
+               - Makes people WANT to comment or share — ask a question or trigger a feeling
+               - NEVER sounds like a robot or news anchor
+               - NEVER repeat the same CTA twice — be creative every time
             5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
                STEP 1: Read the news and pick ONLY ONE category from this list:
                  A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
