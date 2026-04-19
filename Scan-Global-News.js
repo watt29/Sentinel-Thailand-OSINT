@@ -122,7 +122,7 @@ async function runGovernanceBriefing() {
 
         if (!finalSelection) {
             console.log(`   [INFO] Standby. No high-fidelity news detected.`);
-            setTimeout(runGovernanceBriefing, SCAN_INTERVAL_MS);
+            setTimeout(runGovernanceBriefing, getNextRunDelayMs());
             return;
         }
 
@@ -158,14 +158,14 @@ async function runGovernanceBriefing() {
             if (hashtagCount < 3) {
                 console.log(`   [SKIP] Mission aborted: ไม่มี Hashtag ในโพสต์ (พบ ${hashtagCount}) — ข้ามเพื่อรักษาคุณภาพเพจ`);
                 await notifier.sendMessage(`⚠️ <b>SKIP</b>: โพสต์ไม่มี Hashtag เพียงพอ (${hashtagCount}/8) — ข้ามรอบนี้`);
-                setTimeout(runGovernanceBriefing, SCAN_INTERVAL_MS);
+                setTimeout(runGovernanceBriefing, getNextRunDelayMs());
                 return;
             }
 
             if (!finalSelection.original_news || !finalSelection.original_news.image) {
                 console.log(`   [SKIP] Mission aborted: No authentic news image found.`);
                 await notifier.sendMessage(`⚠️ <b>MISSION ABORTED</b>: ข้ามการโพสต์ข่าว "${finalSelection.status}" เนื่องจากไม่พบรูปภาพจริงจากแหล่งข่าว`);
-                setTimeout(runGovernanceBriefing, SCAN_INTERVAL_MS);
+                setTimeout(runGovernanceBriefing, getNextRunDelayMs());
                 return;
             }
 
