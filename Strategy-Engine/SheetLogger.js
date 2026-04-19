@@ -10,7 +10,7 @@ class SheetLogger {
         if (!this.appUrl) return;
         try {
             const res = await axios.post(this.appUrl, payload, {
-                timeout: 10000,
+                timeout: 25000,
                 headers: { 'Content-Type': 'text/plain' }
             });
             const resText = typeof res.data === 'object' ? JSON.stringify(res.data) : String(res.data);
