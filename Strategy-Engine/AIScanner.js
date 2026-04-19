@@ -241,10 +241,10 @@ class AIScanner {
                 F (บันเทิง/วัฒนธรรม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
                 G (สุขภาพ/การแพทย์) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
                 H (ข่าวไทยโดยตรง) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
-                Output ทั้ง post + hashtag ต่อกันเลย ห้ามเปลี่ยนเนื้อหา post:
+                ⚠️ Output เฉพาะ post + hashtag เท่านั้น ห้ามอธิบาย ห้ามบอกว่าเลือก category อะไร ห้ามมี prefix ใดๆ:
                 ${draft.trim()}`;
                 const engWithHashtags = await this._callGroq(engPolishPrompt);
-                const finalDraft = engWithHashtags.trim();
+                const finalDraft = this._cleanDraft(engWithHashtags);
                 candidates.push({
                     status: target.title,
                     original_news: target,
@@ -302,8 +302,10 @@ class AIScanner {
                  H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
 
                STEP: Copy exact 8 hashtags to the very last line. TOTAL = EXACTLY 8. NO MORE.
+            ⚠️ OUTPUT THE POST DIRECTLY — NO explanations, NO "here is the post:", NO category reasoning, NO preamble.
             Report: ${draft}`;
-            const finalReport = await this._callGroq(polishPrompt);
+            const rawReport = await this._callGroq(polishPrompt);
+            const finalReport = this._cleanDraft(rawReport);
 
             if (finalReport && !finalReport.includes("ชายแดนไทย-รัสเซีย")) {
                 candidates.push({
@@ -360,6 +362,30 @@ class AIScanner {
   _cleanJSON(text) {
     const match = text.match(/\{[\s\S]*\}/);
     return match ? match[0] : text;
+  }
+
+  // ตัด AI reasoning/explanation ออกจาก draft ก่อนโพสต์
+  _cleanDraft(text) {
+    if (!text) return text;
+    // ตัดบรรทัดที่เป็น reasoning เช่น "เนื่องจาก...", "ข้อความทั้งหมด:", "category X", "Output:"
+    const reasoningPatterns = [
+      /^เนื่องจาก.{0,200}$/gim,
+      /^ข้อความทั้งหมด\s*:?\s*$/gim,
+      /^.*category\s+[A-H].*$/gim,
+      /^.*เหมาะสมที่สุด.*$/gim,
+      /^Output\s*:?\s*$/gim,
+      /^ดังนั้น.{0,200}$/gim,
+      /^ฉันจะ.{0,200}$/gim,
+      /^นี่คือ.{0,200}$/gim,
+      /^โพสต์\s*:?\s*$/gim,
+    ];
+    let cleaned = text;
+    for (const pat of reasoningPatterns) {
+      cleaned = cleaned.replace(pat, '');
+    }
+    // ตัดบรรทัดว่างซ้ำๆ
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+    return cleaned;
   }
 }
 
