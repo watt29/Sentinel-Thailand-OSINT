@@ -165,11 +165,12 @@ class AIScanner {
                 5. Make it relatable to everyday Thai life — money, work, family, politics, sports
                 6. NO hashtags in this draft (editor will add them)`;
             } else {
-                draftPrompt = `Task: Write a high-tech Thai promotional post for Sentinel Thailand OSINT platform. Theme: AI, Speed, Security.
-                Structure: 🛰️ SENTINEL HQ: [Title]
-                ---
-                [Thai Promotional Content]
-                #AI #SentinelThailand`;
+                draftPrompt = `Task: Write a SHORT Thai promotional post for Sentinel Thailand page. Theme: AI, news, intelligence.
+                STRICT LENGTH: Maximum 4 sentences. NO long paragraphs.
+                Structure:
+                🛰️ [หัวข้อสั้นๆ]
+
+                [2-3 ประโยคโปรโมตเพจ กระชับ น่าติดตาม]`;
             }
 
             let draft = await this._callGemini(draftPrompt);
@@ -189,16 +190,16 @@ class AIScanner {
                 });
                 continue;
             }
-            const polishPrompt = `Refine this into a HIGH-FIDELITY Thai Facebook post designed to maximize engagement and page growth.
+            const polishPrompt = `Refine this into a SHORT punchy Thai Facebook post.
             STRICT RULES:
             1. CONTENT MUST BE IN THAI ONLY.
-            2. KEEP ALL Emojis and Symbols — they increase engagement.
-            3. Make it sound AUTHORITATIVE, ELITE, and SHAREABLE.
-            4. ADD A STRONG CTA (Call-to-Action) BEFORE the hashtags. Choose the most fitting:
-               - ถ้าเป็นข่าวที่น่าตกใจ: "😮 คิดว่ายังไง? คอมเมนต์บอกเลย 👇"
-               - ถ้าเป็นข่าวกีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
-               - ถ้าเป็นข่าวเทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? แชร์ความคิดเห็น 👇"
-               - ถ้าเป็นข่าวทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
+            2. MAXIMUM 6 SENTENCES TOTAL — cut anything longer. NO bullet points. NO headers. NO analysis sections.
+            3. KEEP Emojis — they stop the scroll.
+            4. ADD ONE strong CTA line BEFORE hashtags:
+               - ข่าวตกใจ/การเมือง: "😮 คิดว่ายังไง? คอมเมนต์บอกเลย 👇"
+               - กีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
+               - เทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? 👇"
+               - ทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
             5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
                STEP 1: Read the news and pick ONLY ONE category from this list:
                  A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
