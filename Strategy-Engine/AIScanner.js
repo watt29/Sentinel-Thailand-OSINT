@@ -9,7 +9,6 @@ require('dotenv').config();
 const GLOBAL_RSS_TABLE = [
   // --- GLOBAL POWERHOUSES ---
   { url: 'http://p.apnews.com/rss/world-news', region: 'GLOBAL' },
-  { url: 'https://www.reutersagency.com/feed/?best-topics=world-news', region: 'GLOBAL' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', region: 'GLOBAL' },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', region: 'EUROPE' },
   { url: 'http://rss.cnn.com/rss/edition_world.rss', region: 'USA' },
@@ -17,11 +16,23 @@ const GLOBAL_RSS_TABLE = [
   { url: 'https://www3.nhk.or.jp/nhkworld/rss/world.xml', region: 'ASIA-PACIFIC' },
   { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', region: 'SOUTH-ASIA' },
   { url: 'https://www.scmp.com/rss/91/feed', region: 'CHINA-ASIA' },
-  
-  // --- THAI SOCIAL & INTEL ---
+
+  // --- THAI NEWS & SOCIAL ---
   { url: 'https://www.thestandard.co/feed/', region: 'THAI-SOCIAL' },
   { url: 'https://workpointtoday.com/feed/', region: 'THAI-SOCIAL' },
-  { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', region: 'THAI-INT' }
+  { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', region: 'THAI-INT' },
+  { url: 'https://prachatai.com/feed', region: 'THAI-SOCIAL' },
+  { url: 'https://thematter.co/feed/', region: 'THAI-SOCIAL' },
+
+  // --- THAI SPORTS ---
+  { url: 'https://www.smmsport.com/feed/', region: 'THAI-SPORT' },
+  { url: 'https://www.siamsport.co.th/feed/', region: 'THAI-SPORT' },
+  { url: 'https://feeds.bbci.co.uk/sport/rss.xml', region: 'SPORT-GLOBAL' },
+  { url: 'https://www.goal.com/feeds/en/news', region: 'SPORT-FOOTBALL' },
+
+  // --- TECH & TREND ---
+  { url: 'https://feeds.feedburner.com/TechCrunch', region: 'TECH' },
+  { url: 'https://www.theverge.com/rss/index.xml', region: 'TECH' },
 ];
 
 class AIScanner {
@@ -146,12 +157,22 @@ class AIScanner {
             let draft = await this._callGemini(draftPrompt);
 
             console.log(`   [EDITOR] Polishing...`);
-            const polishPrompt = `Refine this into a HIGH-FIDELITY Thai intelligence brief. 
-            RULES: 
-            1. CONTENT MUST BE IN THAI. 
-            2. ADD EXACTLY 8 TRENDING HASHTAGS AT THE BOTTOM (e.g., #ข่าววันนี้ #SentinelThailand #Breaking news).
-            3. KEEP ALL Emojis and Symbols.
-            4. Make it sound AUTHORITATIVE and ELITE.
+            const polishPrompt = `Refine this into a HIGH-FIDELITY Thai Facebook post designed to maximize engagement and page growth.
+            STRICT RULES:
+            1. CONTENT MUST BE IN THAI ONLY.
+            2. KEEP ALL Emojis and Symbols — they increase engagement.
+            3. Make it sound AUTHORITATIVE, ELITE, and SHAREABLE.
+            4. ADD A STRONG CTA (Call-to-Action) BEFORE the hashtags. Choose the most fitting:
+               - ถ้าเป็นข่าวที่น่าตกใจ: "😮 คิดว่ายังไง? คอมเมนต์บอกเลย 👇"
+               - ถ้าเป็นข่าวกีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
+               - ถ้าเป็นข่าวเทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? แชร์ความคิดเห็น 👇"
+               - ถ้าเป็นข่าวทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
+            5. MANDATORY HASHTAGS — Last line MUST contain EXACTLY 8 hashtags:
+               - 2 trending Thai: #ข่าววันนี้ #ข่าวด่วน
+               - 2 topic-specific (choose based on content): #กีฬา #ฟุตบอล #AI #เศรษฐกิจ #การเมือง #เทคโนโลยี #บันเทิง #สุขภาพ
+               - 2 brand: #SentinelThailand #OSINT
+               - 2 English: #Breaking #WorldNews
+            6. NO HASHTAGS = REJECTED. Place all 8 hashtags on the very last line only.
             Report: ${draft}`;
             const finalReport = await this._callGroq(polishPrompt);
 

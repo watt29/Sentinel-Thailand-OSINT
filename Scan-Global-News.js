@@ -10,9 +10,31 @@ const sheetLogger = require('./Strategy-Engine/SheetLogger');
 const tokenManager = require('./LongLivedTokenGenerator');
 require('dotenv').config();
 
-const SCAN_INTERVAL_MS = (process.env.SCAN_INTERVAL_MINUTES || 10) * 60 * 1000;
-const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // ตรวจทุก 24 ชั่วโมง
-const TOKEN_WARN_DAYS = 7; // แจ้งเตือนเมื่อเหลือน้อยกว่า 7 วัน
+const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const TOKEN_WARN_DAYS = 7;
+
+// Peak hours ไทย (UTC+7) — ชั่วโมงที่คนออนไลน์เยอะที่สุด
+const PEAK_HOURS_TH = [7, 8, 12, 13, 15, 16, 17, 20, 21, 22];
+
+function getNextRunDelayMs() {
+    const now = new Date();
+    const thHour = (now.getUTCHours() + 7) % 24;
+    const thMinute = now.getUTCMinutes();
+
+    // หา peak hour ถัดไป
+    const upcoming = PEAK_HOURS_TH.find(h => h > thHour || (h === thHour && thMinute < 5));
+    let nextHour;
+    if (upcoming !== undefined) {
+        nextHour = upcoming;
+    } else {
+        nextHour = PEAK_HOURS_TH[0] + 24; // วันถัดไป
+    }
+
+    const waitHours = nextHour - thHour;
+    const waitMs = (waitHours * 60 - thMinute) * 60 * 1000;
+    console.log(`   [SCHEDULER] ⏰ Peak hour ถัดไป: ${nextHour % 24}:00 น. (อีก ${Math.round(waitMs/60000)} นาที)`);
+    return waitMs;
+}
 
 async function checkFacebookTokenHealth() {
     const health = await fbPublisher.checkTokenHealth();
@@ -131,6 +153,15 @@ async function runGovernanceBriefing() {
 
         // --- Facebook Execution ---
         if (fbPublisher.isEnabled) {
+            const draft = finalSelection.facebook_draft || '';
+            const hashtagCount = (draft.match(/#\S+/g) || []).length;
+            if (hashtagCount < 3) {
+                console.log(`   [SKIP] Mission aborted: ไม่มี Hashtag ในโพสต์ (พบ ${hashtagCount}) — ข้ามเพื่อรักษาคุณภาพเพจ`);
+                await notifier.sendMessage(`⚠️ <b>SKIP</b>: โพสต์ไม่มี Hashtag เพียงพอ (${hashtagCount}/8) — ข้ามรอบนี้`);
+                setTimeout(runGovernanceBriefing, SCAN_INTERVAL_MS);
+                return;
+            }
+
             if (!finalSelection.original_news || !finalSelection.original_news.image) {
                 console.log(`   [SKIP] Mission aborted: No authentic news image found.`);
                 await notifier.sendMessage(`⚠️ <b>MISSION ABORTED</b>: ข้ามการโพสต์ข่าว "${finalSelection.status}" เนื่องจากไม่พบรูปภาพจริงจากแหล่งข่าว`);
@@ -161,22 +192,23 @@ async function runGovernanceBriefing() {
 
         storage.saveIntel(finalSelection);
         await sheetLogger.logIntel(finalSelection);
-        
-        let timeLeft = SCAN_INTERVAL_MS;
+
+        const nextDelay = getNextRunDelayMs();
+        let timeLeft = nextDelay;
         const countdownInterval = setInterval(() => {
             timeLeft -= 60000;
             if (timeLeft > 0) {
-                console.log(`   [HEARTBEAT] Next intelligence briefing in: ${Math.round(timeLeft/60000)} mins...`);
+                console.log(`   [HEARTBEAT] Next peak-hour post in: ${Math.round(timeLeft/60000)} mins...`);
             } else {
                 clearInterval(countdownInterval);
             }
         }, 60000);
 
-        setTimeout(runGovernanceBriefing, SCAN_INTERVAL_MS);
+        setTimeout(runGovernanceBriefing, nextDelay);
 
     } catch (err) {
         console.error(`   [SYSTEM_CRITICAL] Error in Governance Loop: ${err.message}`);
-        setTimeout(runGovernanceBriefing, 60000); 
+        setTimeout(runGovernanceBriefing, 60 * 60 * 1000); // retry ชั่วโมงถัดไป
     }
 }
 
