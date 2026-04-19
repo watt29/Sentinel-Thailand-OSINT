@@ -25,10 +25,11 @@ class SheetLogger {
                 headers: { 'Content-Type': 'text/plain' } // GAS works best with text/plain JSON
             });
 
-            if (res.data === "SUCCESS") {
+            const resText = typeof res.data === 'object' ? JSON.stringify(res.data) : String(res.data);
+            if (resText.includes("SUCCESS") || res.status === 200) {
                 console.log(`   [SHEET_LOG] ✅ Intelligence archived to Google Sheet.`);
             } else {
-                console.log(`   [SHEET_LOG] ⚠️ Warning: ${res.data}`);
+                console.log(`   [SHEET_LOG] ⚠️ Warning: ${resText}`);
             }
         } catch (e) {
             console.log(`   [SHEET_LOG] ❌ Error: ${e.message}`);

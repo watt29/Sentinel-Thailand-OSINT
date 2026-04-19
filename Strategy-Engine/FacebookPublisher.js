@@ -85,9 +85,24 @@ class FacebookPublisher {
     }
   }
 
+  async _isImageAccessible(imageUrl) {
+    try {
+      const res = await axios.head(imageUrl, { timeout: 5000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const ct = res.headers['content-type'] || '';
+      return res.status === 200 && ct.startsWith('image/');
+    } catch (e) { return false; }
+  }
+
   async postPhotoWithCaption(imageUrl, message) {
     if (!this.isEnabled || this.tokenExpired) {
       return { success: false, error: this.tokenExpired ? 'TOKEN_EXPIRED' : 'DISABLED' };
+    }
+
+    // ตรวจสอบ URL รูปก่อนส่งให้ Facebook
+    const accessible = await this._isImageAccessible(imageUrl);
+    if (!accessible) {
+      console.log(`   [SOCIAL] ⚠️ Image URL ไม่สามารถเข้าถึงได้ — โพสต์เป็น text แทน`);
+      return this.publish(message);
     }
 
     try {
