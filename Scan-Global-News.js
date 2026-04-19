@@ -182,7 +182,8 @@ async function runGovernanceBriefing() {
                 title: finalSelection.status,
                 contentType: finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
                              finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL',
-                riskScore: score
+                riskScore: score,
+                draft: finalSelection.facebook_draft
             });
             
             // Audit Report

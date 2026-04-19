@@ -157,7 +157,8 @@ class FacebookPublisher {
       const title = cardMeta.title || '';
       const contentType = cardMeta.contentType || 'DEEP_INTEL';
       const riskScore = cardMeta.riskScore || 50;
-      const buf = await cardGen.generateCardBuffer(title, contentType, riskScore);
+      const draft = cardMeta.draft || '';
+      const buf = await cardGen.generateCardBuffer(title, contentType, riskScore, draft);
       if (buf) {
         console.log(`   [SOCIAL] 🎨 Generated text card — uploading`);
         return this._uploadPhotoBuffer(buf, message);

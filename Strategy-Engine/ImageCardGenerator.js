@@ -1,7 +1,7 @@
 /**
  * ImageCardGenerator.js
- * สร้าง text-card image (PNG) เมื่อ RSS image ถูก block
- * ใช้ SVG → sharp → PNG buffer — ไม่ต้องการ canvas native deps
+ * สร้าง viral text card (PNG) สไตล์พื้นดำ ตัวขาวใหญ่ bold
+ * เหมือนโพสต์ viral ไทย — ไม่ต้องพึ่งรูป RSS
  */
 const path = require('path');
 const fs = require('fs');
@@ -9,115 +9,129 @@ const fs = require('fs');
 let sharp;
 try { sharp = require('sharp'); } catch (e) { sharp = null; }
 
-const CARD_PRESETS = [
-    { bg: '#0a0f1e', accent: '#00d4ff', text: '#ffffff', style: 'CYBER' },
-    { bg: '#1a0533', accent: '#ff6b35', text: '#ffffff', style: 'ALERT' },
-    { bg: '#0d2137', accent: '#00ff88', text: '#ffffff', style: 'INTEL' },
-    { bg: '#1c1c1c', accent: '#ffd700', text: '#ffffff', style: 'GOLD' },
-    { bg: '#0f1923', accent: '#e63946', text: '#ffffff', style: 'CRITICAL' },
-];
+function _escSVG(str) {
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
-function _wrapText(text, maxCharsPerLine) {
-    const words = text.split(' ');
+// แยกข้อความออกเป็นบรรทัดตาม \n และ wrap ถ้ายาวเกิน
+function _splitLines(text, maxChars) {
+    const raw = text.split('\n');
     const lines = [];
-    let current = '';
-    for (const w of words) {
-        if ((current + ' ' + w).trim().length > maxCharsPerLine) {
-            if (current) lines.push(current.trim());
-            current = w;
-        } else {
-            current = (current + ' ' + w).trim();
+    for (const line of raw) {
+        if (line.trim() === '') { lines.push(''); continue; }
+        // wrap ถ้ายาวเกิน maxChars
+        let cur = '';
+        for (const ch of line) {
+            cur += ch;
+            // ภาษาไทย 1 ตัว = ~1.8 char width — ใช้ length ง่ายๆ
+            if (cur.length >= maxChars) { lines.push(cur.trim()); cur = ''; }
         }
+        if (cur.trim()) lines.push(cur.trim());
     }
-    if (current) lines.push(current.trim());
     return lines;
 }
 
-function _escSVG(str) {
-    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+/**
+ * สร้าง SVG text card สไตล์ viral ไทย
+ * contentLines: string[] — บรรทัดข้อความหลัก (จาก engagement post / deep intel)
+ * style: 'BLACK' | 'DARK_RED' | 'DARK_BLUE'
+ */
+function generateViralSVG(contentLines, style = 'BLACK') {
+    const W = 1080, H = 1080; // square — เหมาะ Facebook มากที่สุด
 
-function generateSVG(title, contentType = 'DEEP_INTEL', riskScore = 50) {
-    const preset = CARD_PRESETS[Math.floor(Math.random() * CARD_PRESETS.length)];
-    const W = 1200, H = 630;
+    const themes = {
+        BLACK:     { bg: '#000000', text: '#ffffff', accent: '#ffffff' },
+        DARK_RED:  { bg: '#1a0000', text: '#ffffff', accent: '#ff3333' },
+        DARK_BLUE: { bg: '#000d1a', text: '#ffffff', accent: '#00aaff' },
+    };
+    const t = themes[style] || themes.BLACK;
 
-    // wrap title ให้พอดีกับ card
-    const cleanTitle = _escSVG(title.substring(0, 120));
-    const titleLines = _wrapText(cleanTitle, 38);
-    const titleSVG = titleLines.slice(0, 3).map((line, i) =>
-        `<text x="80" y="${220 + i * 65}" font-family="Arial,sans-serif" font-size="44" font-weight="bold" fill="${preset.text}" letter-spacing="-0.5">${line}</text>`
-    ).join('\n');
+    // คำนวณ font size ตามจำนวนบรรทัด
+    const lineCount = contentLines.filter(l => l.trim()).length;
+    const fontSize = lineCount <= 3 ? 90 : lineCount <= 5 ? 72 : lineCount <= 7 ? 58 : 46;
+    const lineHeight = Math.round(fontSize * 1.45);
 
-    const modeLabel = {
-        DEEP_INTEL: '🛰️ DEEP INTEL',
-        QUICK_SHARE: '⚡ BREAKING',
-        ENGAGEMENT_POST: '💬 ENGAGEMENT',
-        SYSTEM_BRANDING: '🔵 SENTINEL'
-    }[contentType] || '🌍 NEWS';
+    // จัดกึ่งกลาง vertical
+    const totalH = lineCount * lineHeight;
+    const startY = Math.round((H - totalH) / 2) + fontSize;
 
-    const barWidth = Math.round((riskScore / 100) * 460);
-    const barColor = riskScore >= 80 ? '#e63946' : riskScore >= 50 ? '#ff6b35' : '#00ff88';
-    const now = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    let textSVG = '';
+    let yPos = startY;
+    let lineIndex = 0;
+    for (const line of contentLines) {
+        if (line.trim() === '') { yPos += Math.round(lineHeight * 0.5); continue; }
+        // สลับสี accent ที่บรรทัดสุดท้าย (CTA)
+        const isLast = lineIndex === contentLines.filter(l => l.trim()).length - 1;
+        const color = isLast ? t.accent : t.text;
+        textSVG += `<text
+            x="${W / 2}" y="${yPos}"
+            font-family="'Noto Sans Thai','Sarabun','Arial',sans-serif"
+            font-size="${fontSize}"
+            font-weight="900"
+            fill="${color}"
+            text-anchor="middle"
+            dominant-baseline="auto"
+            letter-spacing="-1"
+        >${_escSVG(line.trim())}</text>\n`;
+        yPos += lineHeight;
+        lineIndex++;
+    }
+
+    // watermark เล็กๆ ล่างขวา
+    const watermark = `<text x="${W - 40}" y="${H - 30}" font-family="Arial,sans-serif" font-size="22" fill="${t.text}33" text-anchor="end" letter-spacing="2">SENTINEL THAILAND</text>`;
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:${preset.bg};stop-opacity:1" />
-      <stop offset="100%" style="stop-color:${preset.bg}dd;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:${preset.accent};stop-opacity:1" />
-      <stop offset="100%" style="stop-color:${preset.accent}88;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-
-  <!-- Background -->
-  <rect width="${W}" height="${H}" fill="url(#bg)" />
-
-  <!-- Decorative grid lines -->
-  <line x1="0" y1="100" x2="${W}" y2="100" stroke="${preset.accent}" stroke-width="0.5" stroke-opacity="0.2"/>
-  <line x1="0" y1="530" x2="${W}" y2="530" stroke="${preset.accent}" stroke-width="0.5" stroke-opacity="0.2"/>
-  <line x1="80" y1="0" x2="80" y2="${H}" stroke="${preset.accent}" stroke-width="0.5" stroke-opacity="0.15"/>
-
-  <!-- Top accent bar -->
-  <rect x="0" y="0" width="${W}" height="6" fill="url(#accent)" />
-
-  <!-- Mode badge -->
-  <rect x="80" y="40" width="220" height="42" rx="6" fill="${preset.accent}22" stroke="${preset.accent}" stroke-width="1.5"/>
-  <text x="190" y="67" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="${preset.accent}" text-anchor="middle" letter-spacing="2">${_escSVG(modeLabel)}</text>
-
-  <!-- Sentinel logo text -->
-  <text x="${W - 80}" y="67" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="${preset.accent}99" text-anchor="end" letter-spacing="3">SENTINEL THAILAND</text>
-
-  <!-- Title lines -->
-  ${titleSVG}
-
-  <!-- Risk score bar -->
-  <text x="80" y="430" font-family="Arial,sans-serif" font-size="14" fill="${preset.accent}aa" letter-spacing="2">RISK LEVEL</text>
-  <rect x="80" y="445" width="460" height="8" rx="4" fill="${preset.accent}22"/>
-  <rect x="80" y="445" width="${barWidth}" height="8" rx="4" fill="${barColor}"/>
-  <text x="555" y="455" font-family="Arial,sans-serif" font-size="14" fill="${barColor}" font-weight="bold">${riskScore}%</text>
-
-  <!-- Bottom divider -->
-  <line x1="80" y1="490" x2="${W - 80}" y2="490" stroke="${preset.accent}" stroke-width="1" stroke-opacity="0.3"/>
-
-  <!-- Footer -->
-  <text x="80" y="520" font-family="Arial,sans-serif" font-size="14" fill="${preset.text}66">${_escSVG(now)}</text>
-  <text x="${W - 80}" y="520" font-family="Arial,sans-serif" font-size="14" fill="${preset.accent}99" text-anchor="end" letter-spacing="1">OSINT INTELLIGENCE NETWORK</text>
-
-  <!-- Corner accent -->
-  <polygon points="${W},0 ${W - 120},0 ${W},120" fill="${preset.accent}15"/>
-  <polygon points="0,${H} 120,${H} 0,${H - 120}" fill="${preset.accent}10"/>
+  <rect width="${W}" height="${H}" fill="${t.bg}"/>
+  ${textSVG}
+  ${watermark}
 </svg>`;
 }
 
-async function generateCardBuffer(title, contentType, riskScore) {
+/**
+ * แปลง facebook_draft → บรรทัดสำหรับ card
+ * ตัด hashtag ออก (ไม่ใส่ในรูป), เหลือแค่เนื้อหา
+ */
+function _extractCardLines(draft, maxLines = 6) {
+    const lines = draft
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('#') && !l.match(/^[#＃]/));
+
+    // ถ้ายาวเกิน wrap ให้พอดี
+    const wrapped = [];
+    for (const line of lines) {
+        const sub = _splitLines(line, 18); // ~18 ตัวอักษรต่อบรรทัดสำหรับ font 72px
+        wrapped.push(...sub);
+    }
+    return wrapped.slice(0, maxLines);
+}
+
+/**
+ * เลือก style ตาม content type
+ */
+function _pickStyle(contentType) {
+    if (contentType === 'ENGAGEMENT_POST') return 'BLACK';
+    if (contentType === 'QUICK_SHARE') return 'DARK_RED';
+    return ['BLACK', 'DARK_BLUE'][Math.floor(Math.random() * 2)];
+}
+
+async function generateCardBuffer(title, contentType = 'DEEP_INTEL', riskScore = 50, draft = '') {
     if (!sharp) {
         console.log(`   [IMGCARD] sharp ไม่ได้ติดตั้ง — ข้าม image card`);
         return null;
     }
     try {
-        const svg = generateSVG(title, contentType, riskScore);
+        // ใช้ draft ถ้ามี, ไม่งั้นใช้ title
+        const source = draft || title;
+        const lines = _extractCardLines(source);
+        if (lines.length === 0) lines.push(title.substring(0, 40));
+
+        const style = _pickStyle(contentType);
+        const svg = generateViralSVG(lines, style);
         const buf = await sharp(Buffer.from(svg)).png().toBuffer();
         return buf;
     } catch (e) {
@@ -126,8 +140,8 @@ async function generateCardBuffer(title, contentType, riskScore) {
     }
 }
 
-async function saveCardToTemp(title, contentType, riskScore) {
-    const buf = await generateCardBuffer(title, contentType, riskScore);
+async function saveCardToTemp(title, contentType, riskScore, draft) {
+    const buf = await generateCardBuffer(title, contentType, riskScore, draft);
     if (!buf) return null;
     const tmpDir = path.join(__dirname, '../tmp');
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
@@ -137,4 +151,4 @@ async function saveCardToTemp(title, contentType, riskScore) {
     return filepath;
 }
 
-module.exports = { generateCardBuffer, saveCardToTemp, generateSVG };
+module.exports = { generateCardBuffer, saveCardToTemp, generateViralSVG };

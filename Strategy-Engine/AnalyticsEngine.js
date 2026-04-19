@@ -126,6 +126,9 @@ class AnalyticsEngine {
         if (posts.length === 0) return;
         console.log(`   [ANALYTICS] 🔄 Refreshing insights for ${posts.length} posts...`);
 
+        let sheetLogger;
+        try { sheetLogger = require('./SheetLogger'); } catch (e) {}
+
         for (const post of posts) {
             const insights = await this.fetchPostInsights(post.post_id, accessToken);
             if (!insights) continue;
@@ -136,6 +139,11 @@ class AnalyticsEngine {
                 WHERE post_id = ?
             `).run(insights.reach, insights.impressions, insights.reactions,
                    insights.comments, insights.shares, post.post_id);
+
+            // sync ไป Google Sheet ด้วย
+            if (sheetLogger && insights.reach > 0) {
+                await sheetLogger.logAnalytics(post.post_id, post.content_type, insights);
+            }
         }
 
         await this._autoAdjustWeights();
