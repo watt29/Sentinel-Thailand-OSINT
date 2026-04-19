@@ -134,8 +134,8 @@ async function runGovernanceBriefing() {
         }
 
         if (!finalSelection) {
-            console.log(`   [INFO] Standby. No high-fidelity news detected.`);
-            setTimeout(runGovernanceBriefing, getNextRunDelayMs());
+            console.log(`   [INFO] Standby. Retrying with fresh news in 60s...`);
+            setTimeout(runGovernanceBriefing, 60000);
             return;
         }
 
