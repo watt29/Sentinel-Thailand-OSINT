@@ -205,14 +205,14 @@ class AIScanner {
                     บรรทัด 7: 🤔 ยังไม่แน่ใจ`
                 ][engFormat];
 
-                draftPrompt = `Task: Create a SHORT viral Thai Facebook engagement post inspired by this news: "${target.title}".
-                RULES:
-                1. Write in Thai ONLY. Max 6 lines total.
-                2. Plain text only — no markdown, no asterisks
-                3. Make it DIRECTLY related to the news topic — translate the news into a Thai life situation
-                4. ${engInstructions}
-                5. NEVER sound like a news report — sound like a real Thai person posting on their personal Facebook
-                6. NO hashtags in this draft (editor will add them)`;
+                draftPrompt = `เขียนโพสต์ Facebook ภาษาไทยสั้นๆ viral จากข่าว: "${target.title}"
+                ${engInstructions}
+                กฎเหล็ก:
+                - ภาษาไทยเท่านั้น
+                - ห้ามสรุปข่าว ห้ามรายงาน — เขียนเหมือนคนไทยทั่วไปโพสต์เอง
+                - ไม่มี hashtag
+                - ไม่มี label เช่น "บรรทัด 1:" หรือ "Format:" หรือ "CHOOSE:"
+                - Output เฉพาะเนื้อหาโพสต์เท่านั้น ห้ามอธิบายอะไรทั้งนั้น`;
             } else {
                 draftPrompt = `Task: Write a SHORT Thai promotional post for Sentinel Thailand page. Theme: AI, news, intelligence.
                 STRICT LENGTH: Maximum 4 sentences. NO long paragraphs.
