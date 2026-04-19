@@ -1,6 +1,7 @@
 /**
  * Scan-Global-News.js [SOVEREIGN GRAND MASTER EDITION]
  * ระบบควบคุมการกระจายข่าวกรองอัตโนมัติ (Autonomous Governance)
+ * Telegram: แจ้งเฉพาะ error + analytics report ทุก 6 ชม.
  */
 const aiScanner = require('./Strategy-Engine/AIScanner');
 const fbPublisher = require('./Strategy-Engine/FacebookPublisher');
@@ -13,35 +14,56 @@ require('dotenv').config();
 let analytics;
 try { analytics = require('./Strategy-Engine/AnalyticsEngine'); } catch (e) { analytics = null; }
 
-// Refresh Facebook Insights ทุก 6 ชม.
-if (analytics) {
-    setInterval(async () => {
-        const token = fbPublisher.accessToken;
-        if (token) await analytics.refreshInsights(token);
-    }, 6 * 60 * 60 * 1000);
-}
-
 const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const TOKEN_WARN_DAYS = 7;
 
-// Peak hours ไทย (UTC+7) — โพสต์ทุก 60 นาที = 10 โพสต์
+// Peak hours ไทย (UTC+7)
 const PEAK_HOURS_TH = [7, 8, 12, 13, 15, 16, 17, 20, 21, 22];
-// Off-peak — โพสต์ทุก 3 ชั่วโมง = ~5 โพสต์ รวม ~15 โพสต์/วัน
 
 function getNextRunDelayMs() {
     const now = new Date();
     const thHour = (now.getUTCHours() + 7) % 24;
     const isPeak = PEAK_HOURS_TH.includes(thHour);
-
     if (isPeak) {
         console.log(`   [SCHEDULER] 🔥 PEAK HOUR (${thHour}:00 น.) — โพสต์ทุก 60 นาที`);
-        return 60 * 60 * 1000; // 60 นาที
+        return 60 * 60 * 1000;
     } else {
         console.log(`   [SCHEDULER] 🌙 OFF-PEAK (${thHour}:00 น.) — โพสต์ทุก 3 ชั่วโมง`);
-        return 3 * 60 * 60 * 1000; // 3 ชั่วโมง
+        return 3 * 60 * 60 * 1000;
     }
 }
 
+// --- Analytics Report ทุก 6 ชม. ---
+async function sendAnalyticsReport() {
+    if (!analytics) return;
+    try {
+        const token = fbPublisher.accessToken;
+        if (token) await analytics.refreshInsights(token);
+
+        const summary = analytics.getWeeklySummary();
+        if (!summary || summary.length === 0) return;
+
+        const rows = summary.map(r =>
+            `${r.content_type}: ${r.total_posts} โพสต์ | Reach ~${r.avg_reach} | Eng ~${r.avg_eng}`
+        ).join('\n');
+
+        const w = analytics._weights || {};
+        await notifier.sendMessage(
+            `📊 <b>[ANALYTICS REPORT] 6-Hour Summary</b>\n` +
+            `━━━━━━━━━━━━━━━━━━\n` +
+            `<b>7 วันที่ผ่านมา:</b>\n<code>${rows}</code>\n\n` +
+            `<b>⚖️ Current Weights:</b>\n` +
+            `DEEP_INTEL: ${w.DEEP_INTEL}% | QUICK: ${w.QUICK_SHARE}% | ENG: ${w.ENGAGEMENT_POST}%`
+        );
+    } catch (e) {
+        console.log(`   [ANALYTICS] Report error: ${e.message}`);
+    }
+}
+
+// Refresh + report ทุก 6 ชม.
+setInterval(sendAnalyticsReport, 6 * 60 * 60 * 1000);
+
+// --- Token Health (แจ้งเฉพาะ error) ---
 async function checkFacebookTokenHealth() {
     const health = await fbPublisher.checkTokenHealth();
     if (!health) return;
@@ -52,12 +74,11 @@ async function checkFacebookTokenHealth() {
     }
 
     if (!health.valid) {
-        // token ไม่ valid — ลอง auto-refresh ด้วย FACEBOOK_SHORT_TOKEN
-        await notifier.sendMessage(`🔑 <b>[TOKEN HEALTH] Facebook Token ไม่ถูกต้อง!</b>\nกำลังลอง Auto-Refresh...`);
+        await notifier.sendMessage(`🔑 <b>[TOKEN ERROR] Facebook Token ไม่ถูกต้อง!</b>\nกำลังลอง Auto-Refresh...`);
         const refreshed = await tokenManager.autoRefresh();
         if (!refreshed) {
             await notifier.sendMessage(
-                `❌ <b>Auto-Refresh ล้มเหลว</b>: ไม่พบ FACEBOOK_SHORT_TOKEN ใน .env\n` +
+                `❌ <b>Auto-Refresh ล้มเหลว</b>\n` +
                 `กรุณารัน: <code>node LongLivedTokenGenerator.js &lt;SHORT_TOKEN&gt;</code>`
             );
         }
@@ -66,18 +87,12 @@ async function checkFacebookTokenHealth() {
 
     if (health.daysLeft !== null && health.daysLeft <= TOKEN_WARN_DAYS) {
         if (health.daysLeft <= 0) {
-            // หมดอายุแล้ว ลอง auto-refresh
             await tokenManager.autoRefresh();
         } else {
-            // แจ้งเตือนล่วงหน้า
             await notifier.sendMessage(
-                `⏳ <b>[TOKEN ALERT] Facebook Token ใกล้หมดอายุ!</b>\n` +
-                `━━━━━━━━━━━━━━━━━━\n` +
-                `เหลืออีก <b>${health.daysLeft} วัน</b> (หมดอายุ: ${health.expiresAt?.toLocaleDateString('th-TH')})\n\n` +
-                `<b>เตรียมการ:</b>\n` +
-                `1. ไปที่ Facebook Developers → รับ Short-lived Token ใหม่\n` +
-                `2. ตั้ง <code>FACEBOOK_SHORT_TOKEN=xxx</code> ใน .env\n` +
-                `3. ระบบจะ Auto-Refresh อัตโนมัติเมื่อถึงเวลา`
+                `⏳ <b>[TOKEN ALERT] Token ใกล้หมดอายุ — เหลือ ${health.daysLeft} วัน</b>\n` +
+                `หมดอายุ: ${health.expiresAt?.toLocaleDateString('th-TH')}\n` +
+                `ตั้ง <code>FACEBOOK_SHORT_TOKEN=xxx</code> ใน .env`
             );
         }
     } else {
@@ -85,25 +100,21 @@ async function checkFacebookTokenHealth() {
     }
 }
 
-// รันตรวจ token ทันทีตอนเริ่ม และทุก 24 ชั่วโมง
 setTimeout(async () => {
     await checkFacebookTokenHealth();
     setInterval(checkFacebookTokenHealth, TOKEN_CHECK_INTERVAL_MS);
-}, 10000); // รอ 10 วิหลังจาก startup
+}, 10000);
 
 async function runGovernanceBriefing() {
-    console.log(`\n   >>> SOVEREIGN ENGINE STABILITY ARMORED. Starting...`);
-    console.log(`   ╔══════════════════════════════════════════╗`);
-    console.log(`   ║     GOVERNANCE COMMAND CENTER [ACTIVE]    ║`);
-    console.log(`   ║     TIME: ${new Date().toLocaleTimeString()}  |  HEALTH: MONITORING   ║`);
-    console.log(`   ╚══════════════════════════════════════════╝\n`);
+    console.log(`\n   >>> GOVERNANCE CYCLE START — ${new Date().toLocaleTimeString()}`);
 
     try {
         const result = await aiScanner.analyzeGlobalSentiment();
-        
+
         if (result.status === "Error") {
             console.log(`   [API_FAILURE] Cooling down for 2 mins...`);
-            setTimeout(runGovernanceBriefing, 120000); 
+            await notifier.sendMessage(`⚠️ <b>[ERROR] API Failure</b> — cooling down 2 mins`);
+            setTimeout(runGovernanceBriefing, 120000);
             return;
         }
 
@@ -116,13 +127,9 @@ async function runGovernanceBriefing() {
                 const isRedundant = reportedEventHistory.some(history => {
                     const historyWords = history.toLowerCase().split(/[ ,.-]+/);
                     const overlap = currentKeywords.filter(word => historyWords.includes(word));
-                    return overlap.length > 5; // Deduplication logic
+                    return overlap.length > 5;
                 });
-
-                if (!isRedundant) {
-                    finalSelection = can;
-                    break;
-                }
+                if (!isRedundant) { finalSelection = can; break; }
             }
         }
 
@@ -132,73 +139,45 @@ async function runGovernanceBriefing() {
             return;
         }
 
-        // --- Execute Governance Visuals ---
         const score = parseInt(finalSelection.global_risk_score || 50);
         const meter = "■".repeat(Math.round(score/5)) + "□".repeat(20 - Math.round(score/5));
-        
         console.log(`   [ RISK ] : [${meter}] (${score}%)`);
         console.log(`   [ STATUS]: ${finalSelection.status}`);
-        console.log(`   [ SOCIAL]: Preparing Facebook Grand Master Post...`);
-
-        // --- Telegram Briefing ---
-        const prefix = (score >= 80) ? "🚨 [CRITICAL] " : "🌍 ";
-        const MAX_TG = 3800; // Telegram limit 4096 — เผื่อ buffer
-        const draftPreview = notifier._escapeHTML(finalSelection.facebook_draft || 'No draft found.');
-        const pulsePreview = notifier._escapeHTML(finalSelection.thai_pulse || 'Analyzing Global Impact...');
-        const header = `<b>${prefix}INTEL BRIEFING: ${notifier._escapeHTML(finalSelection.status)}</b>\n` +
-                       `━━━━━━━━━━━━━━━━━━\n` +
-                       `RISK LVL: ${score}% | CONF: 85%\n` +
-                       `🛡️ <b>PROPAGANDA RISK:</b> LOW\n` +
-                       `━━━━━━━━━━━━━━━━━━\n\n` +
-                       `🌏 <b>SENTINEL THAI PULSE:</b>\n${pulsePreview}\n\n` +
-                       `📱 <b>SENTINEL BROADCAST DRAFT:</b>\n`;
-        const remaining = MAX_TG - header.length;
-        const telMsg = header + (draftPreview.length > remaining ? draftPreview.substring(0, remaining) + '...' : draftPreview);
-
-        await notifier.sendMessage(telMsg);
+        console.log(`   [ SOCIAL]: Preparing Facebook Post...`);
 
         // --- Facebook Execution ---
         if (fbPublisher.isEnabled) {
             const draft = finalSelection.facebook_draft || '';
             const hashtagCount = (draft.match(/#\S+/g) || []).length;
             if (hashtagCount < 3) {
-                console.log(`   [SKIP] Mission aborted: ไม่มี Hashtag ในโพสต์ (พบ ${hashtagCount}) — ข้ามเพื่อรักษาคุณภาพเพจ`);
-                await notifier.sendMessage(`⚠️ <b>SKIP</b>: โพสต์ไม่มี Hashtag เพียงพอ (${hashtagCount}/8) — ข้ามรอบนี้`);
+                console.log(`   [SKIP] ไม่มี Hashtag เพียงพอ (${hashtagCount}) — ข้ามรอบนี้`);
                 setTimeout(runGovernanceBriefing, getNextRunDelayMs());
                 return;
             }
 
             const displayImg = finalSelection.original_news?.image || '';
-            const imgType = displayImg ? "Original News Asset" : "Generated Text Card";
+            const cType = finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
+                          finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL';
 
             const fbRes = await fbPublisher.postPhotoWithCaption(displayImg, finalSelection.facebook_draft, {
                 title: finalSelection.status,
-                contentType: finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
-                             finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL',
+                contentType: cType,
                 riskScore: score,
                 draft: finalSelection.facebook_draft
             });
-            
-            // Audit Report
-            const fbId = fbRes && fbRes.postId ? fbRes.postId : "N/A";
-            const fbStat = fbRes && fbRes.success ? "✅ SUCCESS" : "❌ FAILED";
-            
-            const auditMsg = `<b>🛡️ [SOCIAL SENTINEL AUDIT]</b>\n` +
-                             `━━━━━━━━━━━━━━━━━━\n` +
-                             `🚦 <b>STATUS:</b> ${fbStat}\n` +
-                             `🆔 <b>ID:</b> <code>${fbId}</code>\n` +
-                             `📊 <b>STYLE:</b> Sovereign Long-Form\n` +
-                             `🖼️ <b>TYPE:</b> ${imgType}\n` +
-                             `━━━━━━━━━━━━━━━━━━\n` +
-                             `📝 <i>Audit complete. Governance verified.</i>`;
-            
-            await notifier.sendMessage(auditMsg);
 
-            // Track post สำหรับ Analytics
-            if (analytics && fbRes?.postId && fbRes.postId !== 'N/A') {
-                const cType = finalSelection.thai_pulse?.includes('ENGAGEMENT') ? 'ENGAGEMENT_POST' :
-                              finalSelection.thai_pulse?.includes('QUICK') ? 'QUICK_SHARE' : 'DEEP_INTEL';
-                analytics.trackPost(fbRes.postId, cType);
+            if (fbRes && fbRes.success) {
+                console.log(`   [SOCIAL] ✅ Posted! ID: ${fbRes.postId} (${cType})`);
+                if (analytics && fbRes.postId) analytics.trackPost(fbRes.postId, cType);
+            } else {
+                // แจ้ง Telegram เฉพาะตอน post ล้มเหลว
+                const errMsg = fbRes?.error || 'Unknown error';
+                console.log(`   [SOCIAL] ❌ Post failed: ${errMsg}`);
+                await notifier.sendMessage(
+                    `❌ <b>[POST FAILED]</b>\n` +
+                    `ข่าว: ${notifier._escapeHTML(finalSelection.status.substring(0, 80))}\n` +
+                    `Error: <code>${notifier._escapeHTML(errMsg)}</code>`
+                );
             }
         }
 
@@ -210,7 +189,7 @@ async function runGovernanceBriefing() {
         const countdownInterval = setInterval(() => {
             timeLeft -= 60000;
             if (timeLeft > 0) {
-                console.log(`   [HEARTBEAT] Next peak-hour post in: ${Math.round(timeLeft/60000)} mins...`);
+                console.log(`   [HEARTBEAT] Next post in: ${Math.round(timeLeft/60000)} mins...`);
             } else {
                 clearInterval(countdownInterval);
             }
@@ -219,8 +198,9 @@ async function runGovernanceBriefing() {
         setTimeout(runGovernanceBriefing, nextDelay);
 
     } catch (err) {
-        console.error(`   [SYSTEM_CRITICAL] Error in Governance Loop: ${err.message}`);
-        setTimeout(runGovernanceBriefing, 60 * 60 * 1000); // retry ชั่วโมงถัดไป
+        console.error(`   [SYSTEM_CRITICAL] ${err.message}`);
+        await notifier.sendMessage(`🚨 <b>[SYSTEM CRITICAL]</b>\n<code>${notifier._escapeHTML(err.message)}</code>`);
+        setTimeout(runGovernanceBriefing, 60 * 60 * 1000);
     }
 }
 
