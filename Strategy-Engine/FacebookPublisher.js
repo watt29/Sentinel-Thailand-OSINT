@@ -3,19 +3,65 @@
  * Sovereign-Automation Suite [2026]
  */
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
+
+// Error codes ที่ Facebook ส่งมาเมื่อ token หมดอายุหรือไม่ถูกต้อง
+const TOKEN_EXPIRED_CODES = [190, 102, 467, 463, 460];
 
 class FacebookPublisher {
   constructor() {
-    this.accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+    this._loadToken();
     this.pageId = process.env.FACEBOOK_PAGE_ID;
     this.isEnabled = !!(this.accessToken && this.pageId);
+    this.tokenExpired = false;
+  }
+
+  _loadToken() {
+    // โหลด token ใหม่จาก .env ทุกครั้งที่เรียก (รองรับการ restart pm2 หรือ update .env)
+    const envPath = process.env.ENV_PATH || path.resolve(__dirname, '../.env');
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf8');
+        const match = content.match(/^FACEBOOK_PAGE_ACCESS_TOKEN=(.+)$/m);
+        if (match) this.accessToken = match[1].trim();
+        else this.accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+      }
+    } catch (e) {
+      this.accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+    }
+  }
+
+  _isTokenError(errorCode) {
+    return TOKEN_EXPIRED_CODES.includes(errorCode);
+  }
+
+  async _handleTokenExpiry(errMsg) {
+    if (!this.tokenExpired) {
+      this.tokenExpired = true;
+      console.error(`   [SOCIAL] ❌ Facebook Token หมดอายุหรือไม่ถูกต้อง: ${errMsg}`);
+      // แจ้ง Telegram อัตโนมัติ
+      try {
+        const notifier = require('./TelegramNotifier');
+        await notifier.sendMessage(
+          `🔑 <b>[SENTINEL ALERT] Facebook Token หมดอายุ!</b>\n` +
+          `━━━━━━━━━━━━━━━━━━\n` +
+          `❌ Error: ${errMsg}\n\n` +
+          `<b>วิธีแก้ไข (Auto-Refresh):</b>\n` +
+          `1. ไปที่ Facebook Developers → รับ Short-lived User Token ใหม่\n` +
+          `2. รันคำสั่งบน Server:\n` +
+          `<code>node LongLivedTokenGenerator.js &lt;SHORT_TOKEN&gt;</code>\n` +
+          `3. <code>pm2 restart all</code>\n\n` +
+          `ระบบจะหยุดโพสต์ Facebook ชั่วคราวจนกว่าจะอัปเดต Token`
+        );
+      } catch (e) { /* silent */ }
+    }
   }
 
   async publish(message) {
-    if (!this.isEnabled) {
-      // console.log("   [SOCIAL] Facebook Auto-Post is disabled. Missing Tokens.");
-      return { success: false, error: 'DISABLED' };
+    if (!this.isEnabled || this.tokenExpired) {
+      return { success: false, error: this.tokenExpired ? 'TOKEN_EXPIRED' : 'DISABLED' };
     }
 
     try {
@@ -32,13 +78,17 @@ class FacebookPublisher {
       }
       return { success: false, error: 'UNKNOWN_RESPONSE' };
     } catch (e) {
+      const errCode = e.response?.data?.error?.code;
       const errMsg = e.response?.data?.error?.message || e.message;
+      if (this._isTokenError(errCode)) await this._handleTokenExpiry(errMsg);
       return { success: false, error: errMsg };
     }
   }
 
   async postPhotoWithCaption(imageUrl, message) {
-    if (!this.isEnabled) return { success: false, error: 'DISABLED' };
+    if (!this.isEnabled || this.tokenExpired) {
+      return { success: false, error: this.tokenExpired ? 'TOKEN_EXPIRED' : 'DISABLED' };
+    }
 
     try {
       const url = `https://graph.facebook.com/v19.0/me/photos`;
@@ -54,9 +104,32 @@ class FacebookPublisher {
       }
       return { success: false, error: 'UNKNOWN_RESPONSE' };
     } catch (e) {
+      const errCode = e.response?.data?.error?.code;
       const errMsg = e.response?.data?.error?.message || e.message;
+      if (this._isTokenError(errCode)) await this._handleTokenExpiry(errMsg);
       console.log(`   [SOCIAL] ❌ Facebook Photo API Error: ${errMsg}`);
       return { success: false, error: errMsg };
+    }
+  }
+
+  /**
+   * ตรวจสอบอายุ token ที่เหลืออยู่ผ่าน Facebook Debug API
+   * คืนค่า { valid, expiresAt, daysLeft } หรือ null ถ้าเช็คไม่ได้
+   */
+  async checkTokenHealth() {
+    const appId = process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+    if (!appId || !appSecret || !this.accessToken) return null;
+
+    try {
+      const url = `https://graph.facebook.com/debug_token?input_token=${this.accessToken}&access_token=${appId}|${appSecret}`;
+      const res = await axios.get(url);
+      const data = res.data.data;
+      const expiresAt = data.expires_at ? new Date(data.expires_at * 1000) : null;
+      const daysLeft = expiresAt ? Math.ceil((expiresAt - Date.now()) / 86400000) : null;
+      return { valid: data.is_valid, expiresAt, daysLeft };
+    } catch (e) {
+      return null;
     }
   }
 }

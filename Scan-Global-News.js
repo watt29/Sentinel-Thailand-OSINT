@@ -7,9 +7,56 @@ const fbPublisher = require('./Strategy-Engine/FacebookPublisher');
 const notifier = require('./Strategy-Engine/TelegramNotifier');
 const storage = require('./Strategy-Engine/IntelligenceStorage');
 const sheetLogger = require('./Strategy-Engine/SheetLogger');
+const tokenManager = require('./LongLivedTokenGenerator');
 require('dotenv').config();
 
 const SCAN_INTERVAL_MS = (process.env.SCAN_INTERVAL_MINUTES || 10) * 60 * 1000;
+const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // ตรวจทุก 24 ชั่วโมง
+const TOKEN_WARN_DAYS = 7; // แจ้งเตือนเมื่อเหลือน้อยกว่า 7 วัน
+
+async function checkFacebookTokenHealth() {
+    const health = await fbPublisher.checkTokenHealth();
+    if (!health) return;
+
+    if (!health.valid) {
+        // token ไม่ valid — ลอง auto-refresh ด้วย FACEBOOK_SHORT_TOKEN
+        await notifier.sendMessage(`🔑 <b>[TOKEN HEALTH] Facebook Token ไม่ถูกต้อง!</b>\nกำลังลอง Auto-Refresh...`);
+        const refreshed = await tokenManager.autoRefresh();
+        if (!refreshed) {
+            await notifier.sendMessage(
+                `❌ <b>Auto-Refresh ล้มเหลว</b>: ไม่พบ FACEBOOK_SHORT_TOKEN ใน .env\n` +
+                `กรุณารัน: <code>node LongLivedTokenGenerator.js &lt;SHORT_TOKEN&gt;</code>`
+            );
+        }
+        return;
+    }
+
+    if (health.daysLeft !== null && health.daysLeft <= TOKEN_WARN_DAYS) {
+        if (health.daysLeft <= 0) {
+            // หมดอายุแล้ว ลอง auto-refresh
+            await tokenManager.autoRefresh();
+        } else {
+            // แจ้งเตือนล่วงหน้า
+            await notifier.sendMessage(
+                `⏳ <b>[TOKEN ALERT] Facebook Token ใกล้หมดอายุ!</b>\n` +
+                `━━━━━━━━━━━━━━━━━━\n` +
+                `เหลืออีก <b>${health.daysLeft} วัน</b> (หมดอายุ: ${health.expiresAt?.toLocaleDateString('th-TH')})\n\n` +
+                `<b>เตรียมการ:</b>\n` +
+                `1. ไปที่ Facebook Developers → รับ Short-lived Token ใหม่\n` +
+                `2. ตั้ง <code>FACEBOOK_SHORT_TOKEN=xxx</code> ใน .env\n` +
+                `3. ระบบจะ Auto-Refresh อัตโนมัติเมื่อถึงเวลา`
+            );
+        }
+    } else {
+        console.log(`   [TOKEN] Facebook Token ยังดีอยู่ (เหลือ ${health.daysLeft} วัน)`);
+    }
+}
+
+// รันตรวจ token ทันทีตอนเริ่ม และทุก 24 ชั่วโมง
+setTimeout(async () => {
+    await checkFacebookTokenHealth();
+    setInterval(checkFacebookTokenHealth, TOKEN_CHECK_INTERVAL_MS);
+}, 10000); // รอ 10 วิหลังจาก startup
 
 async function runGovernanceBriefing() {
     console.log(`\n   >>> SOVEREIGN ENGINE STABILITY ARMORED. Starting...`);

@@ -63,10 +63,38 @@ async function getPermanentToken(shortUserToken) {
     }
 }
 
+/**
+ * autoRefresh() — เรียกจากโค้ดอื่นได้โดยตรง (ไม่ต้องใช้ CLI)
+ * ใช้ FACEBOOK_SHORT_TOKEN จาก .env ถ้ามี
+ */
+async function autoRefresh() {
+    const shortToken = process.env.FACEBOOK_SHORT_TOKEN;
+    if (!shortToken) {
+        console.warn("[TOKEN] FACEBOOK_SHORT_TOKEN ไม่พบใน .env — ข้าม auto-refresh");
+        return false;
+    }
+    console.log("[TOKEN] เริ่ม Auto-Refresh Facebook Token...");
+    await getPermanentToken(shortToken);
+
+    // reload token เข้า FacebookPublisher โดยไม่ต้อง restart pm2
+    try {
+        const fb = require('./Strategy-Engine/FacebookPublisher');
+        fb._loadToken();
+        fb.tokenExpired = false;
+        fb.isEnabled = !!(fb.accessToken && fb.pageId);
+        console.log("[TOKEN] FacebookPublisher โหลด Token ใหม่เรียบร้อย — ไม่ต้อง restart pm2");
+    } catch (e) { /* silent if called standalone */ }
+
+    return true;
+}
+
 // รับ Token จาก Argument หรือให้ผู้ใช้ใส่
 const inputToken = process.argv[2];
 if (!inputToken) {
     console.log("💡 วิธีใช้: node LongLivedTokenGenerator.js <SHORT_USER_TOKEN>");
+    console.log("💡 หรือตั้ง FACEBOOK_SHORT_TOKEN ใน .env แล้วระบบจะ refresh อัตโนมัติ");
 } else {
     getPermanentToken(inputToken);
 }
+
+module.exports = { getPermanentToken, autoRefresh };
