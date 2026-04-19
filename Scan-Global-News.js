@@ -18,6 +18,11 @@ async function checkFacebookTokenHealth() {
     const health = await fbPublisher.checkTokenHealth();
     if (!health) return;
 
+    if (health.isPermanent) {
+        console.log(`   [TOKEN] Facebook Token เป็นแบบถาวร (Permanent Page Token) ✅`);
+        return;
+    }
+
     if (!health.valid) {
         // token ไม่ valid — ลอง auto-refresh ด้วย FACEBOOK_SHORT_TOKEN
         await notifier.sendMessage(`🔑 <b>[TOKEN HEALTH] Facebook Token ไม่ถูกต้อง!</b>\nกำลังลอง Auto-Refresh...`);
@@ -48,7 +53,7 @@ async function checkFacebookTokenHealth() {
             );
         }
     } else {
-        console.log(`   [TOKEN] Facebook Token ยังดีอยู่ (เหลือ ${health.daysLeft} วัน)`);
+        console.log(`   [TOKEN] Facebook Token ยังดีอยู่ (เหลือ ${health.daysLeft} วัน) ✅`);
     }
 }
 

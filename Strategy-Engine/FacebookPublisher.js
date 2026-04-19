@@ -125,9 +125,11 @@ class FacebookPublisher {
       const url = `https://graph.facebook.com/debug_token?input_token=${this.accessToken}&access_token=${appId}|${appSecret}`;
       const res = await axios.get(url);
       const data = res.data.data;
-      const expiresAt = data.expires_at ? new Date(data.expires_at * 1000) : null;
-      const daysLeft = expiresAt ? Math.ceil((expiresAt - Date.now()) / 86400000) : null;
-      return { valid: data.is_valid, expiresAt, daysLeft };
+      // expires_at = 0 หมายถึง Page token แบบถาวร (never expires)
+      const isPermanent = !data.expires_at || data.expires_at === 0;
+      const expiresAt = isPermanent ? null : new Date(data.expires_at * 1000);
+      const daysLeft = isPermanent ? Infinity : Math.ceil((expiresAt - Date.now()) / 86400000);
+      return { valid: data.is_valid, expiresAt, daysLeft, isPermanent };
     } catch (e) {
       return null;
     }
