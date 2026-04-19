@@ -114,14 +114,19 @@ async function runGovernanceBriefing() {
 
         // --- Telegram Briefing ---
         const prefix = (score >= 80) ? "🚨 [CRITICAL] " : "🌍 ";
-        const telMsg = `<b>${prefix}INTEL BRIEFING: ${finalSelection.status}</b>\n` +
+        const MAX_TG = 3800; // Telegram limit 4096 — เผื่อ buffer
+        const draftPreview = notifier._escapeHTML(finalSelection.facebook_draft || 'No draft found.');
+        const pulsePreview = notifier._escapeHTML(finalSelection.thai_pulse || 'Analyzing Global Impact...');
+        const header = `<b>${prefix}INTEL BRIEFING: ${notifier._escapeHTML(finalSelection.status)}</b>\n` +
                        `━━━━━━━━━━━━━━━━━━\n` +
                        `RISK LVL: ${score}% | CONF: 85%\n` +
                        `🛡️ <b>PROPAGANDA RISK:</b> LOW\n` +
                        `━━━━━━━━━━━━━━━━━━\n\n` +
-                       `🌏 <b>SENTINEL THAI PULSE:</b>\n${notifier._escapeHTML(finalSelection.thai_pulse || 'Analyzing Global Impact...')}\n\n` +
-                       `📱 <b>SENTINEL BROADCAST DRAFT:</b>\n${notifier._escapeHTML(finalSelection.facebook_draft || 'No draft found.')}`;
-        
+                       `🌏 <b>SENTINEL THAI PULSE:</b>\n${pulsePreview}\n\n` +
+                       `📱 <b>SENTINEL BROADCAST DRAFT:</b>\n`;
+        const remaining = MAX_TG - header.length;
+        const telMsg = header + (draftPreview.length > remaining ? draftPreview.substring(0, remaining) + '...' : draftPreview);
+
         await notifier.sendMessage(telMsg);
 
         // --- Facebook Execution ---
