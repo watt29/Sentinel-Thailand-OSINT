@@ -77,6 +77,15 @@ function _splitLines(text, maxChars) {
  * contentLines: string[] — บรรทัดข้อความหลัก (จาก engagement post / deep intel)
  * style: 'BLACK' | 'DARK_RED' | 'DARK_BLUE'
  */
+function _getFontBase64() {
+    try {
+        if (fs.existsSync(FONT_PATH)) {
+            return fs.readFileSync(FONT_PATH).toString('base64');
+        }
+    } catch (e) {}
+    return null;
+}
+
 function generateViralSVG(contentLines, style = 'BLACK') {
     const W = 1080, H = 1080; // square — เหมาะ Facebook มากที่สุด
 
@@ -106,7 +115,7 @@ function generateViralSVG(contentLines, style = 'BLACK') {
         const color = isLast ? t.accent : t.text;
         textSVG += `<text
             x="${W / 2}" y="${yPos}"
-            font-family="'Noto Sans Thai','Sarabun','Arial',sans-serif"
+            font-family="'Sarabun','Arial',sans-serif"
             font-size="${fontSize}"
             font-weight="900"
             fill="${color}"
@@ -121,7 +130,11 @@ function generateViralSVG(contentLines, style = 'BLACK') {
     // watermark เล็กๆ ล่างขวา
     const watermark = `<text x="${W - 40}" y="${H - 30}" font-family="Arial,sans-serif" font-size="22" fill="${t.text}33" text-anchor="end" letter-spacing="2">SENTINEL THAILAND</text>`;
 
+    const fontB64 = _getFontBase64();
+    const fontFace = fontB64 ? `<defs><style>@font-face{font-family:'Sarabun';src:url('data:font/ttf;base64,${fontB64}') format('truetype');font-weight:bold;}</style></defs>` : '';
+
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  ${fontFace}
   <rect width="${W}" height="${H}" fill="${t.bg}"/>
   ${textSVG}
   ${watermark}
@@ -172,11 +185,6 @@ async function generateCardBuffer(title, contentType = 'DEEP_INTEL', riskScore =
         const svg = generateViralSVG(lines, style);
 
         const opts = { fitTo: { mode: 'width', value: 1080 } };
-        // โหลด font ถ้ามี
-        if (fs.existsSync(FONT_PATH)) {
-            opts.font = { fontFiles: [FONT_PATH], loadSystemFonts: false };
-        }
-
         const resvg = new Resvg(svg, opts);
         const pngData = resvg.render();
         return pngData.asPng();
