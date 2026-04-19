@@ -109,10 +109,12 @@ class AIScanner {
       const newsItems = await this._fetchNews();
       if (!newsItems || newsItems.length === 0) return { status: "No News" };
 
+      // สัดส่วน: DEEP_INTEL 50% | QUICK_SHARE 25% | ENGAGEMENT_POST 20% | SYSTEM_BRANDING 5%
       const dice = Math.floor(Math.random() * 100) + 1;
-      let contentType = "DEEP_INTEL"; 
-      if (dice > 70 && dice <= 90) contentType = "QUICK_SHARE"; 
-      if (dice > 90) contentType = "SYSTEM_BRANDING"; 
+      let contentType = "DEEP_INTEL";
+      if (dice > 50 && dice <= 75) contentType = "QUICK_SHARE";
+      if (dice > 75 && dice <= 95) contentType = "ENGAGEMENT_POST";
+      if (dice > 95) contentType = "SYSTEM_BRANDING";
 
       console.log(`   [STRATEGY] Current Cycle Mode: ${contentType}`);
 
@@ -146,8 +148,21 @@ class AIScanner {
                 ---
                 [Thai Executive Summary 2-3 sentences]
                 #QuickUpdate #News #Thailand`;
+            } else if (contentType === "ENGAGEMENT_POST") {
+                draftPrompt = `Task: Create a SHORT viral Thai Facebook engagement post inspired by this news topic: "${target.title}".
+                RULES:
+                1. Write in Thai ONLY. Max 5 lines total.
+                2. Use large bold-style text (no markdown, just plain text with line breaks)
+                3. Present a simple contrast or dilemma related to the news that makes people want to comment
+                4. Format EXACTLY like this example:
+                   [สถานการณ์ A]
+                   กับ [สถานการณ์ B]
+
+                   คุณเลือกแบบไหนครับ? 👇
+                5. Make it relatable to everyday Thai life — money, work, family, politics, sports
+                6. NO hashtags in this draft (editor will add them)`;
             } else {
-                draftPrompt = `Task: Write a high-tech Thai promotional post for Sentinel Thailand OSINT platform. Theme: AI, Speed, Security. 
+                draftPrompt = `Task: Write a high-tech Thai promotional post for Sentinel Thailand OSINT platform. Theme: AI, Speed, Security.
                 Structure: 🛰️ SENTINEL HQ: [Title]
                 ---
                 [Thai Promotional Content]
@@ -157,6 +172,20 @@ class AIScanner {
             let draft = await this._callGemini(draftPrompt);
 
             console.log(`   [EDITOR] Polishing...`);
+
+            // ENGAGEMENT_POST ใช้ format สั้น ไม่ต้อง polish ยาว
+            if (contentType === "ENGAGEMENT_POST") {
+                const engHashtags = "#ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ความคิดเห็น #ถามตอบ #Thailand #ThaiNews";
+                const finalDraft = draft.trim() + `\n\n${engHashtags}`;
+                candidates.push({
+                    status: target.title,
+                    original_news: target,
+                    facebook_draft: finalDraft,
+                    global_risk_score: 50,
+                    thai_pulse: `โพสต์กระตุ้น Engagement`
+                });
+                continue;
+            }
             const polishPrompt = `Refine this into a HIGH-FIDELITY Thai Facebook post designed to maximize engagement and page growth.
             STRICT RULES:
             1. CONTENT MUST BE IN THAI ONLY.
