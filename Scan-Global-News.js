@@ -13,8 +13,9 @@ require('dotenv').config();
 const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const TOKEN_WARN_DAYS = 7;
 
-// Peak hours ไทย (UTC+7) — ช่วงที่คนออนไลน์เยอะ โพสต์ทุก 15 นาที
+// Peak hours ไทย (UTC+7) — โพสต์ทุก 60 นาที = 10 โพสต์
 const PEAK_HOURS_TH = [7, 8, 12, 13, 15, 16, 17, 20, 21, 22];
+// Off-peak — โพสต์ทุก 3 ชั่วโมง = ~5 โพสต์ รวม ~15 โพสต์/วัน
 
 function getNextRunDelayMs() {
     const now = new Date();
@@ -22,11 +23,11 @@ function getNextRunDelayMs() {
     const isPeak = PEAK_HOURS_TH.includes(thHour);
 
     if (isPeak) {
-        console.log(`   [SCHEDULER] 🔥 PEAK HOUR (${thHour}:00 น.) — โพสต์ถี่ทุก 15 นาที`);
-        return 15 * 60 * 1000; // 15 นาที
-    } else {
-        console.log(`   [SCHEDULER] 🌙 OFF-PEAK (${thHour}:00 น.) — โพสต์ทุก 60 นาที`);
+        console.log(`   [SCHEDULER] 🔥 PEAK HOUR (${thHour}:00 น.) — โพสต์ทุก 60 นาที`);
         return 60 * 60 * 1000; // 60 นาที
+    } else {
+        console.log(`   [SCHEDULER] 🌙 OFF-PEAK (${thHour}:00 น.) — โพสต์ทุก 3 ชั่วโมง`);
+        return 3 * 60 * 60 * 1000; // 3 ชั่วโมง
     }
 }
 
