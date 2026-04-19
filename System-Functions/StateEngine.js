@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const MessageBus = require('./MessageBus');
-const createLogger = require('./Logger');
+const logger = require('./Logger');
 
 class StateEngine {
     constructor() {
-        this.log = createLogger('StateEngine');
+        this.log = logger;
         this.stateFile = path.join(__dirname, '../data.json');
         this.currentBalance = 0;
         this.initialBalance = 0;

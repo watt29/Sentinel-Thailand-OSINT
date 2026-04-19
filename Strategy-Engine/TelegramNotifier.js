@@ -18,7 +18,7 @@ class TelegramNotifier {
    */
   _loadSecurely() {
     try {
-      const envPath = path.join(__dirname, '../.env');
+      const envPath = process.env.ENV_PATH || path.resolve(__dirname, '../.env');
       if (fs.existsSync(envPath)) {
         const content = fs.readFileSync(envPath, 'utf8');
         const lines = content.split('\n');
@@ -55,6 +55,23 @@ class TelegramNotifier {
     } catch (error) { 
       console.error(`[TELEGRAM] Send Error:`, error.response?.data || error.message); 
     }
+  }
+
+  /**
+   * แจ้งเตือนเมื่อ GridBot เริ่มทำงาน
+   */
+  notifyStart(symbol, config) {
+    const msg = `🚀 <b>GridBot Started</b>\nSymbol: <b>${this._escapeHTML(symbol)}</b>\nCapital: $${config.capital || '-'} | Grids: ${config.numGrids || '-'} | Leverage: ${config.leverage || '-'}x\nMode: ${process.env.GRID_PAPER_MODE !== 'false' ? '📄 PAPER' : '🔥 LIVE'}`;
+    this.sendMessage(msg);
+  }
+
+  /**
+   * แจ้งเตือนเมื่อ GridBot ปรับ Grid ใหม่
+   */
+  notifyRebalance(symbol, pnl) {
+    const sign = pnl >= 0 ? '+' : '';
+    const msg = `📏 <b>Grid Rebalanced</b>\nSymbol: <b>${this._escapeHTML(symbol)}</b>\nPnL Trigger: ${sign}$${pnl}\nระบบปรับช่วง Grid อัตโนมัติเพื่อลดความเสี่ยง`;
+    this.sendMessage(msg);
   }
 
   /**

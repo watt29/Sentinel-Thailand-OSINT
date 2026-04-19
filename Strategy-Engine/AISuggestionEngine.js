@@ -50,6 +50,47 @@ class AISuggestionEngine {
       intelSummary: intel ? `Impact: ${intel.projected_btc_impact_percent}% | Mood: ${intel.market_mood}` : "Waiting for Intel..."
     };
   }
+
+  /**
+   * สแกนตลาดและส่งคำแนะนำให้ GridBot พิจารณา
+   * คืนค่า true หากมีคำเตือนที่ต้องการการอนุมัติจากมนุษย์
+   */
+  async processMarketScan(gridBot) {
+    const intel = this.getGlobalContext();
+    if (!intel) return false;
+
+    const riskScore = intel.global_risk_score || 0;
+    if (riskScore > 0.6) {
+      const approvalId = Date.now().toString();
+      this._pendingApprovals = this._pendingApprovals || {};
+      this._pendingApprovals[approvalId] = {
+        gridBot,
+        strategy: this.calculateStrategy(gridBot.config.entryPrice, gridBot.config),
+        createdAt: new Date().toISOString()
+      };
+      console.log(`⚠️ [AISuggestionEngine] High risk detected (${riskScore}). Approval ID: ${approvalId}`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * ดำเนินการอนุมัติคำขอปรับกลยุทธ์จาก LINE command
+   */
+  async applyApproval(approvalId) {
+    this._pendingApprovals = this._pendingApprovals || {};
+    const pending = this._pendingApprovals[approvalId];
+    if (!pending) return false;
+
+    console.log(`✅ [AISuggestionEngine] Applying approved strategy for ID: ${approvalId}`);
+    const { gridBot, strategy } = pending;
+    if (gridBot && gridBot.config) {
+      gridBot.config.defaultSpacing = strategy.suggestedSpacing;
+      gridBot.status = `RUNNING (${strategy.mode})`;
+    }
+    delete this._pendingApprovals[approvalId];
+    return true;
+  }
 }
 
 module.exports = new AISuggestionEngine();

@@ -17,6 +17,7 @@ module.exports = {
       autorestart: true,
       env: {
         NODE_ENV: "production",
+        DASHBOARD_PORT: "3001",
       }
     },
     {
