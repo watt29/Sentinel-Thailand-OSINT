@@ -5,9 +5,46 @@
  */
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 let Resvg;
 try { Resvg = require('@resvg/resvg-js').Resvg; } catch (e) { Resvg = null; }
+
+const FONT_DIR = path.join(__dirname, '../fonts');
+const FONT_PATH = path.join(FONT_DIR, 'Sarabun-Bold.ttf');
+// Sarabun Bold จาก Google Fonts (TTF)
+const FONT_URL = 'https://github.com/google/fonts/raw/main/ofl/sarabun/Sarabun-Bold.ttf';
+
+async function ensureFont() {
+    if (fs.existsSync(FONT_PATH)) return true;
+    try {
+        if (!fs.existsSync(FONT_DIR)) fs.mkdirSync(FONT_DIR, { recursive: true });
+        console.log(`   [IMGCARD] Downloading Sarabun font...`);
+        await new Promise((resolve, reject) => {
+            const file = fs.createWriteStream(FONT_PATH);
+            const get = (url, redirect = 0) => {
+                if (redirect > 5) { reject(new Error('Too many redirects')); return; }
+                https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+                    if (res.statusCode === 301 || res.statusCode === 302) {
+                        get(res.headers.location, redirect + 1);
+                    } else if (res.statusCode === 200) {
+                        res.pipe(file);
+                        file.on('finish', () => { file.close(); resolve(); });
+                    } else {
+                        reject(new Error(`HTTP ${res.statusCode}`));
+                    }
+                }).on('error', reject);
+            };
+            get(FONT_URL);
+        });
+        console.log(`   [IMGCARD] Font downloaded ✅`);
+        return true;
+    } catch (e) {
+        console.log(`   [IMGCARD] Font download failed: ${e.message}`);
+        if (fs.existsSync(FONT_PATH)) fs.unlinkSync(FONT_PATH);
+        return false;
+    }
+}
 
 function _escSVG(str) {
     return (str || '')
@@ -125,13 +162,22 @@ async function generateCardBuffer(title, contentType = 'DEEP_INTEL', riskScore =
         return null;
     }
     try {
+        await ensureFont();
+
         const source = draft || title;
         const lines = _extractCardLines(source);
         if (lines.length === 0) lines.push(title.substring(0, 40));
 
         const style = _pickStyle(contentType);
         const svg = generateViralSVG(lines, style);
-        const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1080 } });
+
+        const opts = { fitTo: { mode: 'width', value: 1080 } };
+        // โหลด font ถ้ามี
+        if (fs.existsSync(FONT_PATH)) {
+            opts.font = { fontFiles: [FONT_PATH], loadSystemFonts: false };
+        }
+
+        const resvg = new Resvg(svg, opts);
         const pngData = resvg.render();
         return pngData.asPng();
     } catch (e) {
