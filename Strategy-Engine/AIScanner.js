@@ -195,11 +195,12 @@ class AIScanner {
             1. CONTENT MUST BE IN THAI ONLY.
             2. MAXIMUM 6 SENTENCES TOTAL — cut anything longer. NO bullet points. NO headers. NO analysis sections.
             3. KEEP Emojis — they stop the scroll.
-            4. ADD ONE strong CTA line BEFORE hashtags:
-               - ข่าวตกใจ/การเมือง: "😮 คิดว่ายังไง? คอมเมนต์บอกเลย 👇"
-               - กีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
-               - เทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? 👇"
-               - ทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
+            4. ADD EXACTLY ONE CTA sentence at the end of the content (before hashtags). Choose ONE only, do NOT show the label:
+               If politics/war/surprising news → write only: 😮 คิดว่ายังไง? คอมเมนต์บอกเลย 👇
+               If sports → write only: ⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥
+               If tech/AI → write only: 🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? 👇
+               If general → write only: 📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏
+               DO NOT write multiple CTAs. DO NOT write the category label.
             5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
                STEP 1: Read the news and pick ONLY ONE category from this list:
                  A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
