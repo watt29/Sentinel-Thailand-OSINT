@@ -214,22 +214,30 @@ class AIScanner {
                - Makes people WANT to comment or share — ask a question or trigger a feeling
                - NEVER sounds like a robot or news anchor
                - NEVER repeat the same CTA twice — be creative every time
-            5. MANDATORY HASHTAGS SYSTEM — Follow these steps STRICTLY:
-               STEP 1: Read the news and pick ONLY ONE category from this list:
-                 A=POLITICS/WAR, B=ECONOMY, C=SPORTS, D=TECH/AI, E=ENVIRONMENT, F=ENTERTAINMENT, G=HEALTH/SCIENCE, H=THAI NEWS
+            7. MANDATORY HASHTAGS — Pick category by the MAIN TOPIC of the news content, NOT the country it happened in:
+               A = POLITICS/WAR/GOVERNMENT → ข่าวการเมือง สงคราม ความขัดแย้งระหว่างประเทศ
+               B = ECONOMY/BUSINESS → ข่าวเศรษฐกิจ ตลาดหุ้น บริษัท การลงทุน การค้า
+               C = SPORTS → ข่าวกีฬาทุกประเภท ฟุตบอล มวย แบดมินตัน มอเตอร์สปอร์ต
+               D = TECH/AI/SCIENCE → ข่าวเทคโนโลยี AI นวัตกรรม วิทยาศาสตร์ อวกาศ
+               E = ENVIRONMENT/CLIMATE → ข่าวสิ่งแวดล้อม โลกร้อน ภัยธรรมชาติ
+               F = ENTERTAINMENT/CULTURE → ข่าวดารา บันเทิง ศิลปะ ดนตรี ภาพยนตร์
+               G = HEALTH/MEDICINE → ข่าวสุขภาพ โรค ยา การแพทย์ โรงพยาบาล งานวิจัยทางการแพทย์
+               H = THAI NEWS → ข่าวที่เกี่ยวข้องกับประเทศไทยโดยตรงเท่านั้น
 
-               STEP 2: Use ONLY the hashtags for that ONE category — DO NOT MIX categories:
+               ตัวอย่าง: ข่าวบริษัทยาจีนพัฒนายารักษาโรค = G (HEALTH) ไม่ใช่ H
+               ตัวอย่าง: ข่าวตลาดหุ้นจีน = B (ECONOMY) ไม่ใช่ H
+
+               HASHTAGS ตาม category:
                  A → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
                  B → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
                  C → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
                  D → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
                  E → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
                  F → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
-                 G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #วิทยาศาสตร์ #Health #Science
+                 G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
                  H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
 
-               STEP 3: Copy the exact 8 hashtags to the last line. TOTAL = EXACTLY 8. NO MORE.
-            6. VIOLATION = REJECTED POST. Place hashtags on the very last line only.
+               STEP: Copy exact 8 hashtags to the very last line. TOTAL = EXACTLY 8. NO MORE.
             Report: ${draft}`;
             const finalReport = await this._callGroq(polishPrompt);
 
