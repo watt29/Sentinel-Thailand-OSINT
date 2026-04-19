@@ -167,11 +167,23 @@ class AIScanner {
                - ถ้าเป็นข่าวกีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
                - ถ้าเป็นข่าวเทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? แชร์ความคิดเห็น 👇"
                - ถ้าเป็นข่าวทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
-            5. MANDATORY HASHTAGS — Last line MUST contain EXACTLY 8 hashtags, NO MORE NO LESS:
-               - ALWAYS include: #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT
-               - Choose EXACTLY 2 topic hashtags that match the news (pick only from): #การเมือง #เศรษฐกิจ #เทคโนโลยี #AI #กีฬา #ฟุตบอล #สุขภาพ #สิ่งแวดล้อม #บันเทิง #สงคราม
-               - Choose EXACTLY 2 English hashtags that match the news (pick only from): #Breaking #WorldNews #Politics #Economy #Sports #Football #Tech #War #Health
-            6. TOTAL = EXACTLY 8 hashtags only. NO MORE. Place on the very last line.
+            5. MANDATORY HASHTAGS — Analyze the news category first, then assign EXACTLY 8 hashtags on the last line using this system:
+
+               ALWAYS INCLUDE (4 fixed):
+               #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT
+
+               THEN pick EXACTLY 4 more based on the news category below:
+
+               🏛️ POLITICS/WAR → #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
+               💰 ECONOMY/FINANCE → #เศรษฐกิจโลก #การเงิน #Economy #Finance
+               ⚽ SPORTS/FOOTBALL → #กีฬา #ฟุตบอลโลก #Sports #Football
+               🤖 TECH/AI → #เทคโนโลยี #AI #Tech #Innovation
+               🌍 ENVIRONMENT/CLIMATE → #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
+               🎬 ENTERTAINMENT → #บันเทิง #ดารา #Entertainment #Trending
+               🏥 HEALTH/SCIENCE → #สุขภาพ #วิทยาศาสตร์ #Health #Science
+               🇹🇭 THAI NEWS → #ไทย #ข่าวไทย #Thailand #ThaiNews
+
+            6. TOTAL = EXACTLY 8 hashtags. NO MORE NO LESS. Last line only.
             Report: ${draft}`;
             const finalReport = await this._callGroq(polishPrompt);
 
