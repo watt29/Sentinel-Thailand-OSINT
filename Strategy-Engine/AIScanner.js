@@ -132,11 +132,11 @@ class AIScanner {
         .slice(0, 15) // เลือกมา 15 ตัวอย่างสุ่มๆ เพื่อส่งให้ RECON คัด
         .map((n, i) => `ID:${i} ${n.title.replace(/["'\\{}]/g, '')}`);
       
-      const reconPrompt = `Task: Select top 3 UNIQUE IDs for ${contentType} mode. AVOID topics already covered recently. JSON ONLY: {"indices": [...]}\nList: ${reconItems.join(' | ')}`;
+      const reconPrompt = `Task: Select top 5 UNIQUE IDs for ${contentType} mode. AVOID topics already covered recently. JSON ONLY: {"indices": [...]}\nList: ${reconItems.join(' | ')}`;
       
       const reconRes = await this._callGroq(reconPrompt);
       const recon = JSON.parse(this._cleanJSON(reconRes));
-      const targets = (recon.indices || []).slice(0, 3).map(idx => newsItems[idx]).filter(t => t);
+      const targets = (recon.indices || []).slice(0, 5).map(idx => newsItems[idx]).filter(t => t);
 
       const candidates = [];
       for (const target of targets) {

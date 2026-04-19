@@ -127,7 +127,7 @@ async function runGovernanceBriefing() {
                 const isRedundant = reportedEventHistory.some(history => {
                     const historyWords = history.toLowerCase().split(/[ ,.-]+/);
                     const overlap = currentKeywords.filter(word => historyWords.includes(word));
-                    return overlap.length > 5;
+                    return overlap.length > 8;
                 });
                 if (!isRedundant) { finalSelection = can; break; }
             }
