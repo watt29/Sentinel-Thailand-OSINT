@@ -167,12 +167,11 @@ class AIScanner {
                - ถ้าเป็นข่าวกีฬา: "⚽ แชร์ให้เพื่อนแฟนบอลด้วยนะ! 🔥"
                - ถ้าเป็นข่าวเทคโนโลยี: "🤖 เทคโนโลยีนี้จะเปลี่ยนชีวิตคุณไหม? แชร์ความคิดเห็น 👇"
                - ถ้าเป็นข่าวทั่วไป: "📢 กดแชร์ให้คนที่คุณรักได้รู้ด้วยนะครับ 🙏"
-            5. MANDATORY HASHTAGS — Last line MUST contain EXACTLY 8 hashtags:
-               - 2 trending Thai: #ข่าววันนี้ #ข่าวด่วน
-               - 2 topic-specific (choose based on content): #กีฬา #ฟุตบอล #AI #เศรษฐกิจ #การเมือง #เทคโนโลยี #บันเทิง #สุขภาพ
-               - 2 brand: #SentinelThailand #OSINT
-               - 2 English: #Breaking #WorldNews
-            6. NO HASHTAGS = REJECTED. Place all 8 hashtags on the very last line only.
+            5. MANDATORY HASHTAGS — Last line MUST contain EXACTLY 8 hashtags, NO MORE NO LESS:
+               - ALWAYS include: #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT
+               - Choose EXACTLY 2 topic hashtags that match the news (pick only from): #การเมือง #เศรษฐกิจ #เทคโนโลยี #AI #กีฬา #ฟุตบอล #สุขภาพ #สิ่งแวดล้อม #บันเทิง #สงคราม
+               - Choose EXACTLY 2 English hashtags that match the news (pick only from): #Breaking #WorldNews #Politics #Economy #Sports #Football #Tech #War #Health
+            6. TOTAL = EXACTLY 8 hashtags only. NO MORE. Place on the very last line.
             Report: ${draft}`;
             const finalReport = await this._callGroq(polishPrompt);
 
