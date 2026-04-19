@@ -170,8 +170,8 @@ async function runGovernanceBriefing() {
                 console.log(`   [SOCIAL] ✅ Posted! ID: ${fbRes.postId} (${cType})`);
                 if (analytics && fbRes.postId) analytics.trackPost(fbRes.postId, cType);
             } else if (fbRes?.error === 'NO_IMAGE' || fbRes?.error === 'IMAGE_BLOCKED') {
-                console.log(`   [SKIP] No image — skipping to next cycle`);
-                setTimeout(runGovernanceBriefing, getNextRunDelayMs());
+                console.log(`   [SKIP] No image — retrying immediately with next candidate`);
+                setTimeout(runGovernanceBriefing, 3000);
                 return;
             } else {
                 const errMsg = fbRes?.error || 'Unknown error';
