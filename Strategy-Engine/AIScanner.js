@@ -68,12 +68,12 @@ class AIScanner {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     try {
         const payload = { contents: [{ parts: [{ text: prompt }] }] };
-        const res = await axios.post(url, payload, { timeout: 30000, headers: { 'Content-Type': 'application/json' } });
+        const res = await axios.post(url, payload, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
         return res.data.candidates[0].content.parts[0].text;
     } catch (e) {
         if (e.response?.status === 404) {
             const backupUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`;
-            const backupRes = await axios.post(backupUrl, { contents: [{ parts: [{ text: prompt }] }] }, { timeout: 30000 });
+            const backupRes = await axios.post(backupUrl, { contents: [{ parts: [{ text: prompt }] }] }, { timeout: 60000 });
             return backupRes.data.candidates[0].content.parts[0].text;
         }
         if (e.response?.status === 429) {
