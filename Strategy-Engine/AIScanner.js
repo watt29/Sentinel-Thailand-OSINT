@@ -145,81 +145,31 @@ class AIScanner {
             
             let draftPrompt = "";
             if (contentType === "DEEP_INTEL") {
-                draftPrompt = `Task: Create a Thai Facebook post for this news: "${target.title}". Facts: ${target.content}.
-                STRICT LENGTH: Maximum 5-6 sentences total. NO bullet points. NO headers. NO sections.
-
-                MANDATORY — OPEN WITH ONE OF THESE STORYTELLING HOOKS (pick the one that fits the emotion):
-                - Shock/Surprise: "ไม่น่าเชื่อเลยครับ — [เรื่องราวในหนึ่งบรรทัด]"
-                - Curiosity: "รู้ไหมครับว่า [ข้อเท็จจริงน่าแปลกใจ]?"
-                - Urgency: "เพิ่งเกิดขึ้นเมื่อกี้ครับ — [หัวข้อ]"
-                - Human angle: "ลองนึกภาพดูครับว่า [สถานการณ์ที่เกิดขึ้นจริง]..."
-                - Bold claim: "[ตัวเลขหรือข้อเท็จจริงที่น่าตกใจ] — นี่คือสิ่งที่เกิดขึ้นจริงครับ"
-
-                Structure:
-                [HOOK — 1 บรรทัด ดึงดูดทันที ไม่ใช่หัวข้อข่าวธรรมดา]
-
-                [เนื้อหาสรุป 3-4 ประโยค บอกเล่าเหมือนเพื่อนเล่าให้ฟัง ไม่ใช่นักข่าวอ่านข่าว]
-
-                [ผลกระทบต่อไทยหรือชีวิตประจำวัน 1 ประโยค]`;
+                draftPrompt = `เขียนโพสต์ Facebook ภาษาไทย จากข่าว: "${target.title}"
+ข้อมูล: ${target.content}
+- เริ่มด้วย hook ดึงดูด 1 บรรทัด (ตกใจ / สงสัย / น่าเป็นห่วง)
+- เนื้อหา 3-4 ประโยค เล่าเหมือนเพื่อนคุย ไม่ใช่รายงานข่าว
+- จบด้วยผลกระทบต่อคนไทย 1 ประโยค
+- รวมทั้งหมดไม่เกิน 6 ประโยค ไม่มี bullet ไม่มี header`;
             } else if (contentType === "QUICK_SHARE") {
-                draftPrompt = `Task: Create a rapid Thai update for: ${target.title}.
-                STRICT LENGTH: Maximum 3 sentences total.
-                Structure: ⚡️ BREAKING: [หัวข้อภาษาไทย]
-
-                [สรุป 2-3 ประโยคสั้นๆ]`;
+                draftPrompt = `เขียนโพสต์ Facebook ภาษาไทย จากข่าว: "${target.title}"
+- ขึ้นต้นด้วย ⚡️ แล้วสรุปข่าวสั้นๆ
+- รวม 2-3 ประโยคเท่านั้น`;
             } else if (contentType === "ENGAGEMENT_POST") {
-                // เลือก format แบบสุ่ม — หลากหลายรูปแบบทำให้เพจไม่น่าเบื่อ
-                const engFormat = Math.floor(Math.random() * 4);
-                const engInstructions = [
-                    // Format 0: Contrast dilemma (viral classic)
-                    `เขียนในรูปแบบ Contrast Dilemma:
-                    บรรทัด 1: [สถานการณ์ A จากข่าว — ไม่มี label "สถานการณ์ A:"]
-                    บรรทัด 2: กับ [สถานการณ์ B ที่ขัดแย้ง — ไม่มี label "สถานการณ์ B:"]
-                    บรรทัด 3: (เว้นบรรทัด)
-                    บรรทัด 4: คุณเลือกแบบไหนครับ? 👇`,
-
-                    // Format 1: Poll question
-                    `เขียนในรูปแบบ Poll:
-                    บรรทัด 1: ถ้าเกิดเหตุการณ์นี้กับคุณ คุณจะทำอะไร? (เชื่อมกับข่าว)
-                    บรรทัด 2: 🅰️ [ตัวเลือก A — ไม่มี label]
-                    บรรทัด 3: 🅱️ [ตัวเลือก B — ไม่มี label]
-                    บรรทัด 4: 🆘 [ตัวเลือก C — ไม่มี label]
-                    บรรทัด 5: (เว้นบรรทัด)
-                    บรรทัด 6: คอมเมนต์ตัวอักษรที่คุณเลือกได้เลยครับ 👇`,
-
-                    // Format 2: Hot take / bold opinion
-                    `เขียนในรูปแบบ Hot Take:
-                    บรรทัด 1: ความจริงที่ใครก็ไม่อยากพูด:
-                    บรรทัด 2: "[ความคิดเห็นแหลมคมเกี่ยวกับข่าวนี้ — พูดตรงๆ]"
-                    บรรทัด 3: (เว้นบรรทัด)
-                    บรรทัด 4: เห็นด้วยไหมครับ? 🔥`,
-
-                    // Format 3: Relatable life scenario
-                    `เขียนในรูปแบบ Relatable Scenario:
-                    บรรทัด 1: ถ้าวันนี้ [เหตุการณ์จากข่าวเกิดขึ้นในชีวิตคุณ]...
-                    บรรทัด 2: (เว้นบรรทัด)
-                    บรรทัด 3: คุณจะรู้สึกยังไงครับ?
-                    บรรทัด 4: 😤 โกรธมาก
-                    บรรทัด 5: 😱 ตกใจ
-                    บรรทัด 6: 😅 ช่างมันเถอะ
-                    บรรทัด 7: 🤔 ยังไม่แน่ใจ`
-                ][engFormat];
-
-                draftPrompt = `เขียนโพสต์ Facebook ภาษาไทยสั้นๆ viral จากข่าว: "${target.title}"
-                ${engInstructions}
-                กฎเหล็ก:
-                - ภาษาไทยเท่านั้น
-                - ห้ามสรุปข่าว ห้ามรายงาน — เขียนเหมือนคนไทยทั่วไปโพสต์เอง
-                - ไม่มี hashtag
-                - ไม่มี label เช่น "บรรทัด 1:" หรือ "Format:" หรือ "CHOOSE:"
-                - Output เฉพาะเนื้อหาโพสต์เท่านั้น ห้ามอธิบายอะไรทั้งนั้น`;
+                const styles = [
+                    `เปรียบเทียบ 2 ตัวเลือกที่ขัดแย้งกันจากข่าว แล้วถามว่า "คุณเลือกแบบไหนครับ? 👇"`,
+                    `ตั้ง poll 3 ตัวเลือก 🅰️ 🅱️ 🆘 เกี่ยวกับข่าว แล้วบอกให้ comment ตัวอักษร`,
+                    `พูดความจริงที่คนไม่กล้าพูดเกี่ยวกับข่าวนี้ แล้วถามว่า "เห็นด้วยไหมครับ? 🔥"`,
+                    `สมมุติให้คนอ่านอยู่ในสถานการณ์ของข่าว แล้วให้เลือก 😤😱😅🤔`
+                ][Math.floor(Math.random() * 4)];
+                draftPrompt = `ข่าว: "${target.title}"
+เขียนโพสต์ Facebook ภาษาไทยสั้นๆ: ${styles}
+ไม่มี hashtag ไม่สรุปข่าว เขียนเหมือนคนไทยทั่วไปโพสต์เอง`;
             } else {
-                draftPrompt = `Task: Write a SHORT Thai promotional post for Sentinel Thailand page. Theme: AI, news, intelligence.
-                STRICT LENGTH: Maximum 4 sentences. NO long paragraphs.
-                Structure:
-                🛰️ [หัวข้อสั้นๆ]
-
-                [2-3 ประโยคโปรโมตเพจ กระชับ น่าติดตาม]`;
+                draftPrompt = `เขียนโพสต์ Facebook ภาษาไทยโปรโมตเพจ Sentinel Thailand
+- หัวข้อ: AI วิเคราะห์ข่าวโลก อัตโนมัติ 24/7
+- 3-4 ประโยค กระชับ น่าติดตาม
+- ขึ้นต้นด้วย 🛰️`;
             }
 
             let draft = await this._callGemini(draftPrompt);
@@ -228,19 +178,18 @@ class AIScanner {
 
             // ENGAGEMENT_POST ใช้ format สั้น ไม่ต้อง polish ยาว
             if (contentType === "ENGAGEMENT_POST") {
-                // hashtags ตาม topic ของข่าว เหมือน DEEP_INTEL
-                const engPolishPrompt = `ดูเนื้อหาข่าวนี้: "${target.title}"
-                เลือก category ที่ตรงที่สุด 1 อย่าง แล้ว copy hashtag ตามนั้นมาต่อท้าย post นี้พอดีๆ:
-                A (การเมือง/สงคราม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
-                B (เศรษฐกิจ/ธุรกิจ) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
-                C (กีฬา) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
-                D (เทคโนโลยี/AI) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
-                E (สิ่งแวดล้อม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
-                F (บันเทิง/วัฒนธรรม) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
-                G (สุขภาพ/การแพทย์) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
-                H (ข่าวไทยโดยตรง) → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
-                ⚠️ Output เฉพาะ post + hashtag เท่านั้น ห้ามอธิบาย ห้ามบอกว่าเลือก category อะไร ห้ามมี prefix ใดๆ:
-                ${draft.trim()}`;
+                const engPolishPrompt = `ข่าว: "${target.title}"
+โพสต์นี้เกี่ยวกับหัวข้ออะไร? เลือก 1 category แล้วต่อ hashtag ท้ายโพสต์ด้านล่างเลย:
+A=การเมือง → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
+B=เศรษฐกิจ → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
+C=กีฬา → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
+D=เทคโนโลยี → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
+E=สิ่งแวดล้อม → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
+F=บันเทิง → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
+G=สุขภาพ → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
+H=ข่าวไทย → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
+Output: โพสต์เดิม + hashtag ที่เลือก ห้ามเพิ่มข้อความอื่น:
+${draft.trim()}`;
                 const engWithHashtags = await this._callGroq(engPolishPrompt);
                 const finalDraft = this._cleanDraft(engWithHashtags);
                 candidates.push({
@@ -252,57 +201,30 @@ class AIScanner {
                 });
                 continue;
             }
-            const polishPrompt = `Refine this into a SHORT punchy Thai Facebook post.
-            STRICT RULES:
-            1. CONTENT MUST BE IN THAI ONLY.
-            2. MAXIMUM 6 SENTENCES TOTAL — cut anything longer. NO bullet points. NO headers. NO analysis sections.
-            3. KEEP Emojis — they stop the scroll.
-            4. HUMAN-LIKE OPENING HOOK: The FIRST LINE must grab attention immediately — write it like a real Thai person talking to a friend, not like a news anchor. Use one of these styles:
-               - ตั้งคำถามที่ทุกคนสงสัย: "รู้ไหมครับว่า..." / "เคยสังเกตไหมว่า..."
-               - บอกเรื่องน่าตกใจตรงๆ: "เพิ่งรู้เลยครับว่า..." / "ไม่น่าเชื่อเลยครับ..."
-               - ชวนคิด: "ถ้าเป็นคุณ คุณจะทำยังไงครับ?"
+            const polishPrompt = `โพสต์นี้เกี่ยวกับข่าว: "${target.title}"
+ทำ 3 ขั้นตอนตามลำดับ:
 
-            5. WRITE LIKE A REAL THAI PERSON — use natural conversational Thai:
-               - ใช้ "ครับ" ลงท้ายประโยค
-               - ใช้คำพูดติดปาก เช่น "จริงๆ แล้ว", "น่าสนใจมากๆ เลยครับ", "ต้องบอกเลยว่า"
-               - ไม่ใช้ภาษาทางการ ไม่ใช้ศัพท์วิชาการ
+ขั้นที่ 1 — ปรับภาษาให้เป็นธรรมชาติ:
+- ภาษาไทย ไม่เกิน 6 ประโยค
+- เขียนเหมือนคนไทยอายุ 25-35 คุยกับเพื่อน ใช้ "ครับ" "นะ" "เลย"
+- บรรทัดแรกต้องดึงดูด (ตกใจ / สงสัย / น่าเป็นห่วง)
+- จบด้วย CTA 1 ประโยค ตามอารมณ์ของข่าว
 
-            6. CREATE A UNIQUE CTA — Do NOT use a template. Read the news content deeply, feel the emotion, then WRITE A BRAND NEW CTA yourself that:
-               - Sounds like a real Thai person (25-35 years old) writing to friends on Facebook
-               - Uses casual Thai: "ครับ", "นะ", "เลย", "มากๆ", "แบบนี้", "จริงๆ"
-               - Matches the EXACT emotion of this specific news (anger/shock/sadness/joy/curiosity/fear/pride)
-               - Is MAX 1-2 sentences
-               - Ends with an emoji that fits the mood
-               - Makes people WANT to comment or share — ask a question or trigger a feeling
-               - NEVER sounds like a robot or news anchor
-               - NEVER repeat the same CTA twice — be creative every time
-            7. MANDATORY HASHTAGS — Pick category by the MAIN TOPIC of the news content, NOT the country it happened in:
-               A = POLITICS/WAR/GOVERNMENT → ข่าวการเมือง สงคราม ความขัดแย้งระหว่างประเทศ
-               B = ECONOMY/BUSINESS → ข่าวเศรษฐกิจ ตลาดหุ้น บริษัท การลงทุน การค้า
-               C = SPORTS → ข่าวกีฬาทุกประเภท ฟุตบอล มวย แบดมินตัน มอเตอร์สปอร์ต
-               D = TECH/AI/SCIENCE → ข่าวเทคโนโลยี AI นวัตกรรม วิทยาศาสตร์ อวกาศ
-               E = ENVIRONMENT/CLIMATE → ข่าวสิ่งแวดล้อม โลกร้อน ภัยธรรมชาติ
-               F = ENTERTAINMENT/CULTURE → ข่าวดารา บันเทิง ศิลปะ ดนตรี ภาพยนตร์
-               G = HEALTH/MEDICINE → ข่าวสุขภาพ โรค ยา การแพทย์ โรงพยาบาล งานวิจัยทางการแพทย์
-               H = THAI NEWS → ข่าวในประเทศไทย สินค้าไทย วัฒนธรรมไทย คนไทย เหตุการณ์ในไทย GI ไทย
+ขั้นที่ 2 — เลือก category ตามเนื้อหาหลักของข่าว (ไม่ใช่ประเทศ):
+A=การเมือง B=เศรษฐกิจ C=กีฬา D=เทคโนโลยี E=สิ่งแวดล้อม F=บันเทิง G=สุขภาพ H=ข่าวไทย
 
-               ตัวอย่าง: ข่าวปลาสลิดบ้านแพ้วได้ GI = H (THAI NEWS)
-               ตัวอย่าง: ข่าวบริษัทยาจีนพัฒนายารักษาโรค = G (HEALTH) ไม่ใช่ H
-               ตัวอย่าง: ข่าวตลาดหุ้นจีน = B (ECONOMY) ไม่ใช่ H
+ขั้นที่ 3 — ต่อ hashtag บรรทัดสุดท้าย (copy ตรงๆ 8 อัน):
+A → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
+B → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
+C → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
+D → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
+E → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
+F → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
+G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
+H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
 
-               HASHTAGS ตาม category:
-                 A → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #การเมืองโลก #ภูมิรัฐศาสตร์ #Politics #WorldNews
-                 B → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เศรษฐกิจโลก #การเงิน #Economy #Finance
-                 C → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #กีฬา #มอเตอร์สปอร์ต #Sports #Racing
-                 D → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #เทคโนโลยี #AI #Tech #Innovation
-                 E → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สิ่งแวดล้อม #โลกร้อน #Climate #Environment
-                 F → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #บันเทิง #ดารา #Entertainment #Trending
-                 G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
-                 H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
-
-               STEP: Copy exact 8 hashtags to the very last line. TOTAL = EXACTLY 8. NO MORE.
-            ⚠️ OUTPUT THE POST DIRECTLY — NO explanations, NO "here is the post:", NO category reasoning, NO preamble.
-            Report: ${draft}`;
+Output: โพสต์ที่แก้แล้ว + hashtag เท่านั้น ห้ามอธิบายขั้นตอน:
+${draft}`;
             const rawReport = await this._callGroq(polishPrompt);
             const finalReport = this._cleanDraft(rawReport);
 
