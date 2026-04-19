@@ -13,27 +13,21 @@ require('dotenv').config();
 const TOKEN_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const TOKEN_WARN_DAYS = 7;
 
-// Peak hours ไทย (UTC+7) — ชั่วโมงที่คนออนไลน์เยอะที่สุด
+// Peak hours ไทย (UTC+7) — ช่วงที่คนออนไลน์เยอะ โพสต์ทุก 15 นาที
 const PEAK_HOURS_TH = [7, 8, 12, 13, 15, 16, 17, 20, 21, 22];
 
 function getNextRunDelayMs() {
     const now = new Date();
     const thHour = (now.getUTCHours() + 7) % 24;
-    const thMinute = now.getUTCMinutes();
+    const isPeak = PEAK_HOURS_TH.includes(thHour);
 
-    // หา peak hour ถัดไป
-    const upcoming = PEAK_HOURS_TH.find(h => h > thHour || (h === thHour && thMinute < 5));
-    let nextHour;
-    if (upcoming !== undefined) {
-        nextHour = upcoming;
+    if (isPeak) {
+        console.log(`   [SCHEDULER] 🔥 PEAK HOUR (${thHour}:00 น.) — โพสต์ถี่ทุก 15 นาที`);
+        return 15 * 60 * 1000; // 15 นาที
     } else {
-        nextHour = PEAK_HOURS_TH[0] + 24; // วันถัดไป
+        console.log(`   [SCHEDULER] 🌙 OFF-PEAK (${thHour}:00 น.) — โพสต์ทุก 60 นาที`);
+        return 60 * 60 * 1000; // 60 นาที
     }
-
-    const waitHours = nextHour - thHour;
-    const waitMs = (waitHours * 60 - thMinute) * 60 * 1000;
-    console.log(`   [SCHEDULER] ⏰ Peak hour ถัดไป: ${nextHour % 24}:00 น. (อีก ${Math.round(waitMs/60000)} นาที)`);
-    return waitMs;
 }
 
 async function checkFacebookTokenHealth() {
