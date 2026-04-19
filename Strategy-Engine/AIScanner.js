@@ -163,8 +163,11 @@ class AIScanner {
                     `สมมุติให้คนอ่านอยู่ในสถานการณ์ของข่าว แล้วให้เลือก 😤😱😅🤔`
                 ][Math.floor(Math.random() * 4)];
                 draftPrompt = `ข่าว: "${target.title}"
-เขียนโพสต์ Facebook ภาษาไทยสั้นๆ: ${styles}
-ไม่มี hashtag ไม่สรุปข่าว เขียนเหมือนคนไทยทั่วไปโพสต์เอง`;
+เนื้อหา: ${target.content}
+เขียนโพสต์ Facebook ภาษาไทย:
+1. สรุปข่าวสั้นๆ 1-2 ประโยค ให้คนเข้าใจก่อนว่าเกิดอะไรขึ้น
+2. จากนั้น: ${styles}
+ไม่มี hashtag เขียนเหมือนคนไทยทั่วไปโพสต์เอง`;
             } else {
                 draftPrompt = `เขียนโพสต์ Facebook ภาษาไทยโปรโมตเพจ Sentinel Thailand
 - หัวข้อ: AI วิเคราะห์ข่าวโลก อัตโนมัติ 24/7
@@ -223,7 +226,7 @@ F → #ข่าววันนี้ #ข่าวด่วน #SentinelThailan
 G → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #สุขภาพ #การแพทย์ #Health #Medicine
 H → #ข่าววันนี้ #ข่าวด่วน #SentinelThailand #OSINT #ไทย #ข่าวไทย #Thailand #ThaiNews
 
-Output: โพสต์ที่แก้แล้ว + hashtag เท่านั้น ห้ามอธิบายขั้นตอน:
+Output: โพสต์ที่แก้แล้ว + hashtag เท่านั้น ห้ามบอก category ห้ามอธิบาย ห้ามขึ้นต้นด้วยอะไรนอกจากเนื้อหาโพสต์:
 ${draft}`;
             const rawReport = await this._callGroq(polishPrompt);
             const finalReport = this._cleanDraft(rawReport);
@@ -293,12 +296,15 @@ ${draft}`;
       /^เนื่องจาก.{0,200}$/gim,
       /^ข้อความทั้งหมด\s*:?\s*$/gim,
       /^.*category\s+[A-H].*$/gim,
+      /^.*[A-H]\s*=\s*(การเมือง|เศรษฐกิจ|กีฬา|เทคโนโลยี|สิ่งแวดล้อม|บันเทิง|สุขภาพ|ข่าวไทย).*$/gim,
+      /^โพสต์นี้เกี่ยวกับ.{0,100}$/gim,
       /^.*เหมาะสมที่สุด.*$/gim,
       /^Output\s*:?\s*$/gim,
       /^ดังนั้น.{0,200}$/gim,
       /^ฉันจะ.{0,200}$/gim,
       /^นี่คือ.{0,200}$/gim,
       /^โพสต์\s*:?\s*$/gim,
+      /^ขั้นที่\s*\d.{0,200}$/gim,
     ];
     let cleaned = text;
     for (const pat of reasoningPatterns) {
